@@ -1,5 +1,5 @@
 <!--
-Copyright 2020 Adobe. All rights reserved.
+Copyright 2021 Adobe. All rights reserved.
 This file is licensed to you under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License. You may obtain a copy
 of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -12,10 +12,4 @@ governing permissions and limitations under the License.
 
 # aio-lib-template
 
-This template is used by this [tool](https://github.com/adobe/create-aio-lib)
-
-To update this README.md, run:
-```
-npm install
-npm run generate-docs
-```
+node lib to provide a consistent interface to various config files that make up a Firefly app and extensions
