@@ -9,7 +9,22 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const swaggerClient = require('./mocks/swagger-client')
-
-// ensure a mocked swagger-client module for unit-tests
-jest.setMock('swagger-client', swaggerClient)
+module.exports = {
+  testEnvironment: 'node',
+  verbose: true,
+  setupFilesAfterEnv: ['./test/jest.setup.js'],
+  collectCoverage: true,
+  testPathIgnorePatterns: [
+    '<rootDir>/src/*'
+  ],
+  collectCoverageFrom: [
+    'src/**/*.js'
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 100,
+      lines: 100,
+      statements: 100
+    }
+  }
+}

@@ -1,20 +1,31 @@
 {
-  "name": "@adobe/aio-lib-template",
-  "version": "1.2.3",
-  "description": "Adobe I/O Lib",
+  "name": "@adobe/aio-cli-lib-app-config",
+  "version": "0.1.0",
+  "description": "node lib to provide a consistent interface to various config files that make up a Firefly app and extensions",
   "repository": "https://github.com/adobe/aio-lib-template/",
   "license": "Apache-2.0",
   "main": "src/index.js",
   "scripts": {
     "test": "npm run lint && npm run unit-tests",
     "lint": "eslint src test",
-    "unit-tests": "jest --config test/jest.config.js --maxWorkers=2",
+    "unit-tests": "jest --config jest.config.js --maxWorkers=2",
     "typings": "jsdoc -t node_modules/tsd-jsdoc/dist -r src/*.js -d .",
     "jsdoc": "jsdoc2md -t ./docs/readme_template.md src/**/*.js > README.md",
     "generate-docs": "npm run typings && npm run jsdoc"
   },
   "dependencies": {
+    "@adobe/aio-lib-core-config": "^2.0.0",
     "@adobe/aio-lib-core-logging": "^1.1.2",
+    "@adobe/aio-lib-env": "^1.0.0",
+    "archiver": "^5.0.0",
+    "cross-fetch": "^3.0.4",
+    "execa": "^4.0.3",
+    "fs-extra": "^9.0.1",
+    "globby": "^11.0.1",
+    "js-yaml": "^3.14.0",
+    "lodash.clonedeep": "^4.5.0",
+    "semver": "^7.3.2",
+    "sha1": "^1.1.1"
   },
   "devDependencies": {
     "@adobe/eslint-config-aio-lib-config": "^1.2.0",
@@ -31,7 +42,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.0",
-    "jest": "^24.8.0",
+    "jest": "^26.6.3",
     "jest-fetch-mock": "^3.0.2",
     "jest-junit": "^10.0.0",
     "jest-plugin-fs": "^2.9.0",
@@ -43,5 +54,29 @@
   },
   "engines": {
     "node": ">=12.0.0"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 100,
+        "lines": 100,
+        "statements": 100
+      }
+    },
+    "testPathIgnorePatterns": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "reporters": [
+      "default",
+      "jest-junit"
+    ],
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "./test/jest.setup.js"
+    ]
   }
 }
