@@ -1,0 +1,80 @@
+{
+    "project": {
+        "id": "123",
+        "name": "TestProject123",
+        "title": "Test Title ",
+        "description": "My project description ",
+        "org": {
+            "id": "25591412",
+            "name": "Developers-Developers-Dévêlöpèrš",
+            "ims_org_id": "XOXOXOXOXOXOX@AdobeOrg"
+        },
+        "workspace": {
+            "id": "1356",
+            "name": "TestWörkspacé",
+            "title": "Tést Tïtle ",
+            "description": " My wörkspacè description",
+            "action_url": "https://ABCD-TestProject-TestWorkspace.adobeioruntime.net",
+            "app_url": "https://ABCD-TestProject-TestWorkspace.adobestatic.net",
+            "details": {
+                "credentials": [
+                    {
+                        "id": "17561142",
+                        "name": "Projéct A",
+                        "integration_type": "oauthweb",
+                        "oauth2": {
+                            "client_id": "XYXYXYXYXYXYXYXYX",
+                            "client_secret": "XYXYXYXYZZZZZZ",
+                            "redirect_uri": [ "https://test123" ],
+                            "defaultRedirectUri": "https://test123"
+                        }
+                    },
+                    {
+                        "id": "17606512",
+                        "name": "PröjectB",
+                        "integration_type": "service",
+                        "jwt": {
+                            "client_id": "XUXUXUXUXUXUXUX",
+                            "client_secret": "XPXPXPXPXPXPXPXPX",
+                            "technical_account_email": "XTXTXTXTXTX@techacct.adobe.com",
+                            "technical_account_id": "IDIDIDIDID@techacct.adobe.com",
+                            "meta_scopes": [
+                                "ent_smartcontent_sdk",
+                                "ent_adobeio_sdk"
+                            ]
+                        }
+                    },
+                    {
+                        "id": "17950",
+                        "name": "New Test Intégration 8",
+                        "integration_type": "oauthandroid",
+                        "oauth2": {
+                            "client_id": "XRXRXRXRXRXRXRXRXR",
+                            "client_secret": "XRXRXRXRXRXRXRXRXRX",
+                            "redirect_uri": [ "https://abc123/foo" ],
+                            "defaultRedirectUri": "https://abc123/foo"
+                        }
+                    }
+                ],
+                "services": [
+                    {
+                        "code": "AdobeIOManagementAPISDK",
+                        "name": "I/O Management API"
+                    },
+                    {
+                        "code": "CC SDK",
+                        "name": "Creative SDK"
+                    }
+                ],
+                "runtime": {
+                    "namespaces": [
+                        {
+                            "name": "Name",
+                            "auth": "Auth"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

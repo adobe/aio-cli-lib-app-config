@@ -13,6 +13,7 @@ governing permissions and limitations under the License.
 global.mockFs()
 const { loadConfig } = require('../src')
 const mockAIOConfig = require('@adobe/aio-lib-core-config')
+
 const yaml = require('js-yaml')
 const path = require('path')
 
