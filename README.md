@@ -10,6 +10,13 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 -->
 
+[![Version](https://img.shields.io/npm/v/@adobe/aio-cli-lib-app-config.svg)](https://npmjs.org/package/@adobe/aio-cli-lib-app-config)
+[![Downloads/week](https://img.shields.io/npm/dw/@adobe/aio-cli-lib-app-config.svg)](https://npmjs.org/package/@adobe/aio-cli-lib-app-config)
+![Node.js CI](https://github.com/adobe/aio-cli-lib-app-configworkflows/Node.js%20CI/badge.svg)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Codecov Coverage](https://img.shields.io/codecov/c/github/adobe/aio-cli-lib-app-config/master.svg?style=flat-square)](https://codecov.io/gh/adobe/aio-cli-lib-app-config/)
+
+
 # aio-cli-lib-app-config
 
 node lib to provide a consistent interface to various config files that make up a Firefly app and extensions
