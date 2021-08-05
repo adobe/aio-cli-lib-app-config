@@ -7,7 +7,7 @@ on:
       - 'package.json'
 jobs:
   publish:
-    if: github.repository == 'adobe/aio-cli-lib-app-config
+    if: github.repository == 'adobe/aio-cli-lib-app-config'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
