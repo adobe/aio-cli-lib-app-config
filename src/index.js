@@ -16,14 +16,16 @@ const fs = require('fs-extra')
 const aioConfigLoader = require('@adobe/aio-lib-core-config')
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-cli-lib-app-config', { provider: 'debug' })
 
+// give or take daylight savings, and leap seconds ...
+const AboutAWeekInSeconds = '604800'
 const defaults = {
   defaultAppHostname: 'adobeio-static.net',
   defaultTvmUrl: 'https://firefly-tvm.adobe.io',
   defaultOwApihost: 'https://adobeioruntime.net',
   defaultHTMLCacheDuration: '60',
-  defaultJSCacheDuration: '604800',
-  defaultCSSCacheDuration: '604800',
-  defaultImageCacheDuration: '604800',
+  defaultJSCacheDuration: AboutAWeekInSeconds,
+  defaultCSSCacheDuration: AboutAWeekInSeconds,
+  defaultImageCacheDuration: AboutAWeekInSeconds,
   stageAppHostname: 'dev.runtime.adobe.io',
   USER_CONFIG_FILE: 'app.config.yaml',
   LEGACY_RUNTIME_MANIFEST: 'manifest.yml',
@@ -575,4 +577,4 @@ function pathConfigValueToAbs (pathValue, fullKeyToPathValue, includeIndex) {
   return path.resolve(path.dirname(configPath), pathValue)
 }
 
-module.exports = { loadConfig }
+module.exports = loadConfig

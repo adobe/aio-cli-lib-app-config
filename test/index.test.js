@@ -11,17 +11,11 @@ governing permissions and limitations under the License.
 */
 
 global.mockFs()
-const { loadConfig } = require('../src')
+const loadConfig = require('../src')
 const mockAIOConfig = require('@adobe/aio-lib-core-config')
 
 const yaml = require('js-yaml')
 const path = require('path')
-
-// const chalk = require('chalk')
-// const defaults = require('../../../src/lib/defaults')
-
-// jest.mock('@adobe/aio-lib-core-logging')
-// const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-cli-plugin-app:config-loader', { provider: 'debug' })
 
 const libEnv = require('@adobe/aio-lib-env')
 
