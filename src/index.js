@@ -135,7 +135,7 @@ function loadCommonConfig () {
   aioConfigLoader.reload()
   const aioConfig = aioConfigLoader.get() || {}
 
-  const packagejson = fs.readJsonSync('package.json', { throws: false })
+  const packagejson = fs.readJsonSync('package.json', { throws: true })
 
   // defaults
   // remove scoped name to use this for open whisk entities
