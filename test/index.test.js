@@ -39,6 +39,11 @@ describe('load config', () => {
     expect(config).toEqual(getMockConfig('app', global.fakeConfig.tvm))
   })
 
+  test('not in an app', async () => {
+    global.loadFixtureApp('not-in-app')
+    expect(() => loadConfig()).toThrow(new Error('package.json: ENOENT: no such file or directory, open \'package.json\''))
+  })
+
   test('exc extension config', async () => {
     global.loadFixtureApp('exc')
     config = loadConfig({})
