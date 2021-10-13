@@ -19,7 +19,7 @@ governing permissions and limitations under the License.
 
 # aio-cli-lib-app-config
 
-node lib to provide a consistent interface to various config files that make up a Firefly app and extensions
+node lib to provide a consistent interface to various config files that make up Adobe Developer App Builder applications and extensions
 
 ### Loading the app config returns an object that describes the entire applications. 
 Including:
