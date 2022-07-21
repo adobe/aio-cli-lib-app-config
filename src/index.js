@@ -291,7 +291,7 @@ function loadUserConfigLegacy (commonConfig) {
   if (commonConfig.aio.cna !== undefined || commonConfig.aio.app !== undefined) {
     aioLogger.warn('App config in \'.aio\' file is deprecated. Please move your \'.aio.app\' or \'.aio.cna\' to \'app.config.yaml\'.')
     const appConfig = { ...commonConfig.aio.app, ...commonConfig.aio.cna }
-    Object.entries(appConfig).map(([k, v]) => {
+    Object.entries(appConfig).forEach(([k, v]) => {
       legacyAppConfig[k] = v
       includeIndex[`${defaults.APPLICATION_CONFIG_KEY}.${k}`] = { file: '.aio', key: `app.${k}` }
     })
