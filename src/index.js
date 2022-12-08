@@ -86,6 +86,7 @@ const cloneDeep = require('lodash.clonedeep')
  *        }
  *      }
  *    },
+ *    configManifest: {}, // TBD
  *    OPTIONAL:'dx/asset-compute/worker/1': {
  *       ...same as above...
  *    },
@@ -125,6 +126,7 @@ function loadConfig (options = { allowNoImpl: false }) {
     includeIndex,
     aio: commonConfig.aio,
     packagejson: commonConfig.packagejson,
+    configManifest: userConfig.configManifest,
     root: process.cwd()
   }
 }
