@@ -158,7 +158,7 @@ function loadCommonConfig () {
     ow: owConfig,
     aio: aioConfig,
     // soon not needed anymore (for old headless validator)
-    imsOrgId: aioConfig && aioConfig.project && aioConfig.project.org && aioConfig.project.org.ims_org_id
+    imsOrgId: aioConfig.project?.org?.ims_org_id
   }
 }
 
@@ -289,7 +289,9 @@ function loadUserConfigLegacy (commonConfig) {
   // todo: new value usingLegacyConfig
   // this module should not console.log/warn ... or include chalk ...
   if (commonConfig.aio.cna !== undefined || commonConfig.aio.app !== undefined) {
-    aioLogger.warn('App config in \'.aio\' file is deprecated. Please move your \'.aio.app\' or \'.aio.cna\' to \'app.config.yaml\'.')
+    // this might have never have been seen in the wild as we don't know
+    // what log-level users have set
+    aioLogger.error('App config in \'.aio\' file is deprecated. Please move your \'.aio.app\' or \'.aio.cna\' to \'app.config.yaml\'.')
     const appConfig = { ...commonConfig.aio.app, ...commonConfig.aio.cna }
     Object.entries(appConfig).forEach(([k, v]) => {
       legacyAppConfig[k] = v
@@ -344,7 +346,7 @@ function loadUserConfigLegacy (commonConfig) {
     })
     // todo: new val usingLegacyHooks:Boolean
     if (Object.keys(hooks).length > 0) {
-      aioLogger.warn('hooks in \'package.json\' are deprecated. Please move your hooks to \'app.config.yaml\' under the \'hooks\' key')
+      aioLogger.error('hooks in \'package.json\' are deprecated. Please move your hooks to \'app.config.yaml\' under the \'hooks\' key')
       legacyAppConfig.hooks = hooks
       // build index
       includeIndex[`${defaults.APPLICATION_CONFIG_KEY}.hooks`] = { file: 'package.json', key: 'scripts' }
@@ -421,7 +423,10 @@ function buildExtConfigs (userConfig, commonConfig, includeIndex) {
 
 /** @private */
 function buildAppConfig (userConfig, commonConfig, includeIndex) {
-  const fullAppConfig = buildSingleConfig(defaults.APPLICATION_CONFIG_KEY, userConfig[defaults.APPLICATION_CONFIG_KEY], commonConfig, includeIndex)
+  const fullAppConfig = buildSingleConfig(defaults.APPLICATION_CONFIG_KEY,
+    userConfig[defaults.APPLICATION_CONFIG_KEY],
+    commonConfig,
+    includeIndex)
 
   if (!fullAppConfig.app.hasBackend && !fullAppConfig.app.hasFrontend) {
     // only set application config if there is an actuall app, meaning either some backend or frontend
@@ -445,6 +450,7 @@ function buildSingleConfig (configName, singleUserConfig, commonConfig, includeI
     manifest: {},
     actions: {},
     tests: {},
+    events: {},
     // root of the app folder
     root: process.cwd(),
     name: configName
@@ -480,6 +486,8 @@ function buildSingleConfig (configName, singleUserConfig, commonConfig, includeI
   config.app.hasBackend = !!manifest
   config.app.hasFrontend = fs.existsSync(web)
   config.app.dist = path.resolve(dist, dist === defaultDistPath ? subFolderName : '')
+
+  config.events = singleUserConfig.events
 
   // actions
   config.actions.src = path.resolve(actions) // needed for app add first action
