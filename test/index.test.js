@@ -329,4 +329,77 @@ application:
     config = loadConfig({})
     expect(config.all.application.manifest.full).toEqual({ iam: 'empty' })
   })
+
+  test('manifest with response headers and web src', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          web:
+            src: 'web-src'
+            response-headers:
+              /*:
+                testHeader: foo
+          runtimeManifest:
+            iam: empty
+`
+      }
+    )
+    config = loadConfig({})
+    expect(config.all.application.web['response-headers']).toEqual({ '/*': { testHeader: 'foo' } })
+  })
+
+  test('manifest with multiple response headers', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          web:
+            src: 'web-src'
+            response-headers:
+              /*:
+                testHeader1: foo1
+                testHeader2: foo2
+                testHeader3: foo3
+              /*.html:
+                testHeader: htmlFoo
+              /*.js:
+                testHeader: jsFoo
+              /test/folder/*:
+                testHeader: folderFoo
+          runtimeManifest:
+            iam: empty
+`
+      }
+    )
+    const expectedRes = {
+      '/*': { testHeader1: 'foo1', testHeader2: 'foo2', testHeader3: 'foo3' },
+      '/*.html': { testHeader: 'htmlFoo' },
+      '/*.js': { testHeader: 'jsFoo' },
+      '/test/folder/*': { testHeader: 'folderFoo' }
+    }
+    config = loadConfig({})
+    expect(config.all.application.web['response-headers']).toEqual(expectedRes)
+  })
+
+  test('manifest with response headers and default web src', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          web:
+            response-headers:
+              /*:
+                testHeader: foo
+          runtimeManifest:
+            iam: empty
+`
+      }
+    )
+    config = loadConfig({})
+    expect(config.all.application.web['response-headers']).toEqual({ '/*': { testHeader: 'foo' } })
+  })
 })
