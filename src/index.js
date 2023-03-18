@@ -473,10 +473,17 @@ function buildSingleConfig (configName, singleUserConfig, commonConfig, includeI
 
   // absolute paths
   const actions = pathConfigValueToAbs(singleUserConfig.actions, fullKeyPrefix + '.actions', includeIndex) || defaultActionPath
-  const web = pathConfigValueToAbs(singleUserConfig.web, fullKeyPrefix + '.web', includeIndex) || defaultWebPath
   const unitTest = pathConfigValueToAbs(singleUserConfig.unitTest, fullKeyPrefix + '.web', includeIndex) || defaultUnitTestPath
   const e2eTest = pathConfigValueToAbs(singleUserConfig.e2eTest, fullKeyPrefix + '.web', includeIndex) || defaultE2eTestPath
   const dist = pathConfigValueToAbs(singleUserConfig.dist, fullKeyPrefix + '.dist', includeIndex) || defaultDistPath
+
+  let web
+  if (!singleUserConfig.web || typeof singleUserConfig.web === 'string') {
+    // keep backward compatibility - web src is directly defined as string web: web-src
+    web = pathConfigValueToAbs(singleUserConfig.web, fullKeyPrefix + '.web', includeIndex) || defaultWebPath
+  } else {
+    web = pathConfigValueToAbs(singleUserConfig.web.src, fullKeyPrefix + '.web', includeIndex) || defaultWebPath
+  }
 
   config.tests.unit = path.resolve(unitTest)
   config.tests.e2e = path.resolve(e2eTest)
@@ -505,6 +512,9 @@ function buildSingleConfig (configName, singleUserConfig, commonConfig, includeI
 
   // web
   config.web.src = path.resolve(web) // needed for app add first web-assets
+  if (singleUserConfig.web && singleUserConfig.web['response-headers']) {
+    config.web['response-headers'] = singleUserConfig.web['response-headers']
+  }
   if (config.app.hasFrontend) {
     config.web.injectedConfig = path.resolve(path.join(web, 'src', 'config.json'))
     // only add subfolder name if dist is default value
