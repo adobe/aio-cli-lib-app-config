@@ -451,6 +451,7 @@ function buildSingleConfig (configName, singleUserConfig, commonConfig, includeI
     actions: {},
     tests: {},
     events: {},
+    project: {},
     // root of the app folder
     root: process.cwd(),
     name: configName
@@ -494,7 +495,12 @@ function buildSingleConfig (configName, singleUserConfig, commonConfig, includeI
   config.app.hasFrontend = fs.existsSync(web)
   config.app.dist = path.resolve(dist, dist === defaultDistPath ? subFolderName : '')
 
-  config.events = singleUserConfig.events
+  if (singleUserConfig.events) {
+    config.events = singleUserConfig.events
+  }
+  if (commonConfig?.aio?.project) {
+    config.project = commonConfig.aio.project
+  }
 
   // actions
   config.actions.src = path.resolve(actions) // needed for app add first action
