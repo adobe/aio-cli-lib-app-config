@@ -215,6 +215,7 @@ const nuiSingleConfig = {
       e2e: winCompat(`${root}/src/dx-asset-compute-worker-1/e2e`),
       unit: winCompat(`${root}/src/dx-asset-compute-worker-1/test`)
     },
+    // events: {},
     root: `${root}`,
     name: 'dx/asset-compute/worker/1',
     hooks: {
@@ -269,6 +270,7 @@ const applicationSingleConfig = {
       e2e: winCompat(`${root}e2e`),
       unit: winCompat(`${root}test`)
     },
+    // events: {},
     root: `${root}`,
     name: 'application',
     hooks: {
@@ -322,11 +324,15 @@ const applicationNoActionsSingleConfig = {
     },
     root: `${root}`,
     name: 'application',
+    // events: {},
     hooks: {
       'pre-app-run': 'echo hello'
     }
   }
 }
+
+// const applicationNoEventsSingleConfig = { ...applicationNoActionsSingleConfig }
+// applicationNoEventsSingleConfig.application.events = {}
 
 // expected return values from config loader for matching fixtures in __fixtures__
 const expectedConfigs = {
@@ -368,6 +374,18 @@ const expectedConfigs = {
     },
     root
   },
+  // 'app-no-events': {
+  //   all: { ...applicationNoActionsSingleConfig },
+  //   implements: [
+  //     'application'
+  //   ],
+  //   includeIndex: appNoActionsIncludeIndex,
+  //   packagejson: {
+  //     version: '1.0.0',
+  //     name: 'app-no-actions'
+  //   },
+  //   root
+  // },
   'app-no-actions': {
     all: { ...applicationNoActionsSingleConfig },
     implements: [

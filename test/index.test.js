@@ -36,7 +36,11 @@ describe('load config', () => {
   test('standalone app config', async () => {
     global.loadFixtureApp('app')
     config = loadConfig() // {} or not for coverage
-    expect(config).toEqual(getMockConfig('app', global.fakeConfig.tvm))
+    console.log('config = ', JSON.stringify(config, 0, 2))
+    const mockConfig = getMockConfig('app', global.fakeConfig.tvm, {
+      'all.application.project': expect.any(Object)
+    })
+    expect(config).toEqual(mockConfig)
   })
 
   test('not in an app', async () => {
@@ -47,25 +51,35 @@ describe('load config', () => {
   test('exc extension config', async () => {
     global.loadFixtureApp('exc')
     config = loadConfig({})
-    expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm))
+    expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
+      'all.dx/excshell/1': expect.any(Object)
+    }))
   })
 
   test('standalone app, exc and nui extension config', async () => {
     global.loadFixtureApp('app-exc-nui')
     config = loadConfig({})
-    expect(config).toEqual(getMockConfig('app-exc-nui', global.fakeConfig.tvm))
+    expect(config).toEqual(getMockConfig('app-exc-nui', global.fakeConfig.tvm, {
+      'all.application.project': expect.any(Object),
+      'all.dx/excshell/1.project': expect.any(Object),
+      'all.dx/asset-compute/worker/1.project': expect.any(Object)
+    }))
   })
 
   test('standalone app with no actions', async () => {
     global.loadFixtureApp('app-no-actions')
     config = loadConfig({})
-    expect(config).toEqual(getMockConfig('app-no-actions', global.fakeConfig.tvm))
+    expect(config).toEqual(getMockConfig('app-no-actions', global.fakeConfig.tvm, {
+      'all.application.project': expect.any(Object)
+    }))
   })
 
   test('exc with complex include pattern', async () => {
     global.loadFixtureApp('exc-complex-includes')
     config = loadConfig({})
-    expect(config).toEqual(getMockConfig('exc-complex-includes', global.fakeConfig.tvm))
+    expect(config).toEqual(getMockConfig('exc-complex-includes', global.fakeConfig.tvm, {
+      'all.dx/excshell/1.project': expect.any(Object)
+    }))
   })
 
   test('standalone application with legacy configuration system', async () => {
@@ -74,7 +88,9 @@ describe('load config', () => {
     // mock app config
     mockAIOConfig.get.mockImplementation(k => fullAioConfig)
     config = loadConfig({})
-    expect(config).toEqual(getMockConfig('legacy-app', fullAioConfig))
+    expect(config).toEqual(getMockConfig('legacy-app', fullAioConfig, {
+      'all.application.project': expect.any(Object)
+    }))
   })
 
   // corner cases - coverage
@@ -87,6 +103,7 @@ describe('load config', () => {
       'all.dx/excshell/1.app.name': 'unnamed-app',
       'all.dx/excshell/1.app.version': '0.1.0',
       'all.dx/excshell/1.ow.package': 'unnamed-app-0.1.0',
+      'all.dx/excshell/1.project': expect.any(Object),
       'packagejson.name': 'unnamed-app',
       'packagejson.version': '0.1.0'
     }))
@@ -105,6 +122,7 @@ describe('load config', () => {
       'all.dx/excshell/1.actions.dist': path.resolve('/src/dx-excshell-1/new/dist/for/excshell/actions'),
       'all.dx/excshell/1.web.distDev': path.resolve('/src/dx-excshell-1/new/dist/for/excshell/web-dev'),
       'all.dx/excshell/1.web.distProd': path.resolve('/src/dx-excshell-1/new/dist/for/excshell/web-prod'),
+      'all.dx/excshell/1.project': expect.any(Object),
       includeIndex: expect.any(Object)
     }))
   })
@@ -125,6 +143,7 @@ describe('load config', () => {
         secretAccessKey: 'fakesecret',
         params: { Bucket: 'fakebucket' }
       },
+      'all.dx/excshell/1.project': expect.any(Object),
       includeIndex: expect.any(Object)
     }))
   })
@@ -139,6 +158,7 @@ describe('load config', () => {
     config = loadConfig({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.s3.tvmUrl': 'customurl',
+      'all.dx/excshell/1.project': expect.any(Object),
       includeIndex: expect.any(Object)
     }))
   })
@@ -152,6 +172,7 @@ describe('load config', () => {
 
     config = loadConfig({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
+      'all.dx/excshell/1.project': expect.any(Object),
       includeIndex: expect.any(Object)
     }))
   })
@@ -166,6 +187,7 @@ describe('load config', () => {
     config = loadConfig({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.manifest.full.packages.my-exc-package.actions.newAction': { web: 'yes' },
+      'all.dx/excshell/1.project': expect.any(Object),
       includeIndex: expect.any(Object)
     }))
   })
@@ -178,6 +200,7 @@ describe('load config', () => {
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.app.defaultHostname': 'dev.runtime.adobe.io',
       'all.dx/excshell/1.app.hostname': 'dev.runtime.adobe.io',
+      'all.dx/excshell/1.project': expect.any(Object),
       includeIndex: expect.any(Object)
     }))
   })
@@ -280,6 +303,8 @@ extensions:
     config = loadConfig({})
     expect(config).toEqual(getMockConfig('legacy-app', fullAioConfig, {
       'all.application.hooks': {},
+      // 'all.application.events': expect.any(Object),
+      'all.application.project': expect.any(Object),
       includeIndex: expect.any(Object),
       'packagejson.scripts': {}
     }))
@@ -304,6 +329,8 @@ extensions:
       'all.application.manifest.full': {
         packages: { thepackage: 'takesover' }
       },
+      // 'all.application.events': expect.any(Object),
+      'all.application.project': expect.any(Object),
       'all.application.manifest.package': undefined,
       'all.application.hooks': {
         // already there

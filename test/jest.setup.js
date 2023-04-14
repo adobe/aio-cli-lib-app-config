@@ -19,6 +19,11 @@ const eol = require('eol')
 const path = require('path')
 
 const fileSystem = require('jest-plugin-fs').default
+const project = {
+  org: {
+    ims_org_id: "00000000000000000100000@AdobeOrg"
+  }
+}
 
 // dont touch the real fs
 global.mockFs = () => {
@@ -150,17 +155,18 @@ global.defaultAppHostName = 'adobeio-static.net'
 global.defaultTvmUrl = 'https://adobeio.adobeioruntime.net/apis/tvm/'
 global.defaultOwApihost = 'https://adobeioruntime.net'
 global.fakeS3Bucket = 'fake-bucket'
-global.fakeOrgId = '00000000000000000100000@AdobeOrg'
+
 global.fakeConfig = {
   tvm: {
-    project: { org: { ims_org_id: global.fakeOrgId } },
+    project,
     runtime: {
       namespace: 'fake_ns',
       auth: 'fake:auth'
     }
   },
+  project,
   local: {
-    project: { org: { ims_org_id: global.fakeOrgId } },
+    project,
     runtime: {
       // those must match the once set by dev cmd
       apihost: 'http://localhost:3233',
@@ -170,7 +176,7 @@ global.fakeConfig = {
   },
   // todo delete those should not be passed via aio now
   creds: {
-    project: { org: { ims_org_id: global.fakeOrgId } },
+    project,
     runtime: {
       namespace: 'fake_ns',
       auth: 'fake:auth'
