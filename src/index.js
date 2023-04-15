@@ -493,9 +493,9 @@ function buildSingleConfig (configName, singleUserConfig, commonConfig, includeI
   config.app.hasFrontend = fs.existsSync(web)
   config.app.dist = path.resolve(dist, dist === defaultDistPath ? subFolderName : '')
 
-  // if (singleUserConfig.events) {
-  //   config.events = { ...singleUserConfig.events }
-  // }
+  if (singleUserConfig.events) {
+    config.events = { ...singleUserConfig.events }
+  }
   if (commonConfig?.aio?.project) {
     config.project = commonConfig.aio.project
   }
