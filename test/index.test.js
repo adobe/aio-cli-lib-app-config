@@ -59,7 +59,7 @@ describe('load config', () => {
   test('exc with events config', async () => {
     global.loadFixtureApp('exc-with-events')
     config = loadConfig({})
-    expect(config.all['dx/excshell/1']).toEqual(expect.objectContaining({events: expect.any(Object)}))
+    expect(config.all['dx/excshell/1']).toEqual(expect.objectContaining({ events: expect.any(Object) }))
   })
 
   test('standalone app, exc and nui extension config', async () => {

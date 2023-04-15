@@ -21,7 +21,7 @@ const path = require('path')
 const fileSystem = require('jest-plugin-fs').default
 const project = {
   org: {
-    ims_org_id: "00000000000000000100000@AdobeOrg"
+    ims_org_id: '00000000000000000100000@AdobeOrg'
   }
 }
 
