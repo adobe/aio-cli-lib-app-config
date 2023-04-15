@@ -76,7 +76,8 @@ describe('load config', () => {
     global.loadFixtureApp('app-no-actions')
     config = loadConfig({})
     expect(config).toEqual(getMockConfig('app-no-actions', global.fakeConfig.tvm, {
-      'all.application.project': expect.any(Object)
+      'all.application.project': expect.any(Object),
+      'all.application.events': expect.undefined
     }))
   })
 

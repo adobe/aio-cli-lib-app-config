@@ -164,6 +164,7 @@ global.fakeConfig = {
       auth: 'fake:auth'
     }
   },
+  events: {},
   project,
   local: {
     project,

@@ -324,7 +324,7 @@ const applicationNoActionsSingleConfig = {
     },
     root: `${root}`,
     name: 'application',
-    // events: {},
+    events: {},
     hooks: {
       'pre-app-run': 'echo hello'
     }
