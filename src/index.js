@@ -34,6 +34,24 @@ const defaults = {
   EXTENSIONS_CONFIG_KEY: 'extensions'
 }
 
+const HookKeys = [
+  'pre-app-build',
+  'post-app-build',
+  'build-actions',
+  'build-static',
+  'pre-app-deploy',
+  'post-app-deploy',
+  'deploy-actions',
+  'deploy-static',
+  'pre-app-undeploy',
+  'post-app-undeploy',
+  'undeploy-actions',
+  'undeploy-static',
+  'pre-app-run',
+  'post-app-run',
+  'serve-static'
+]
+
 const {
   getCliEnv, /* function */
   STAGE_ENV /* string */
@@ -321,27 +339,14 @@ function loadUserConfigLegacy (commonConfig) {
   if (pkgjsonscripts) {
     const hooks = {}
     // https://www.adobe.io/apis/experienceplatform/project-firefly/docs.html#!AdobeDocs/project-firefly/master/guides/app-hooks.md
-    hooks['pre-app-build'] = pkgjsonscripts['pre-app-build']
-    hooks['post-app-build'] = pkgjsonscripts['post-app-build']
-    hooks['build-actions'] = pkgjsonscripts['build-actions']
-    hooks['build-static'] = pkgjsonscripts['build-static']
-    hooks['pre-app-deploy'] = pkgjsonscripts['pre-app-deploy']
-    hooks['post-app-deploy'] = pkgjsonscripts['post-app-deploy']
-    hooks['deploy-actions'] = pkgjsonscripts['deploy-actions']
-    hooks['deploy-static'] = pkgjsonscripts['deploy-static']
-    hooks['pre-app-undeploy'] = pkgjsonscripts['pre-app-undeploy']
-    hooks['post-app-undeploy'] = pkgjsonscripts['post-app-undeploy']
-    hooks['undeploy-actions'] = pkgjsonscripts['undeploy-actions']
-    hooks['undeploy-static'] = pkgjsonscripts['undeploy-static']
-    hooks['pre-app-run'] = pkgjsonscripts['pre-app-run']
-    hooks['post-app-run'] = pkgjsonscripts['post-app-run']
-    hooks['serve-static'] = pkgjsonscripts['serve-static']
-    // remove undefined hooks
-    Object.entries(hooks).forEach(([k, v]) => {
-      if (!hooks[k]) {
-        delete hooks[k]
+
+    HookKeys.forEach(hookKey => {
+      if (pkgjsonscripts[hookKey]) {
+        hooks[hookKey] = pkgjsonscripts[hookKey]
+        includeIndex[`${defaults.APPLICATION_CONFIG_KEY}.hooks.${hookKey}`] = { file: 'package.json', key: `scripts.${hookKey}` }
       }
     })
+
     // todo: new val usingLegacyHooks:Boolean
     if (Object.keys(hooks).length > 0) {
       aioLogger.warn('hooks in \'package.json\' are deprecated. Please move your hooks to \'app.config.yaml\' under the \'hooks\' key')
