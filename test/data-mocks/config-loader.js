@@ -215,6 +215,7 @@ const nuiSingleConfig = {
       e2e: winCompat(`${root}/src/dx-asset-compute-worker-1/e2e`),
       unit: winCompat(`${root}/src/dx-asset-compute-worker-1/test`)
     },
+    // events: {},
     root: `${root}`,
     name: 'dx/asset-compute/worker/1',
     hooks: {
@@ -269,6 +270,7 @@ const applicationSingleConfig = {
       e2e: winCompat(`${root}e2e`),
       unit: winCompat(`${root}test`)
     },
+    // events: {},
     root: `${root}`,
     name: 'application',
     hooks: {
@@ -322,6 +324,7 @@ const applicationNoActionsSingleConfig = {
     },
     root: `${root}`,
     name: 'application',
+    events: {},
     hooks: {
       'pre-app-run': 'echo hello'
     }
