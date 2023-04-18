@@ -36,7 +36,6 @@ describe('load config', () => {
   test('standalone app config', async () => {
     global.loadFixtureApp('app')
     config = loadConfig() // {} or not for coverage
-    console.log('config = ', JSON.stringify(config, 0, 2))
     const mockConfig = getMockConfig('app', global.fakeConfig.tvm, {
       'all.application.project': expect.any(Object)
     })
