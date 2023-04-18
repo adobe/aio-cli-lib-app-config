@@ -331,9 +331,6 @@ const applicationNoActionsSingleConfig = {
   }
 }
 
-// const applicationNoEventsSingleConfig = { ...applicationNoActionsSingleConfig }
-// applicationNoEventsSingleConfig.application.events = {}
-
 // expected return values from config loader for matching fixtures in __fixtures__
 const expectedConfigs = {
   exc: {
@@ -374,18 +371,6 @@ const expectedConfigs = {
     },
     root
   },
-  // 'app-no-events': {
-  //   all: { ...applicationNoActionsSingleConfig },
-  //   implements: [
-  //     'application'
-  //   ],
-  //   includeIndex: appNoActionsIncludeIndex,
-  //   packagejson: {
-  //     version: '1.0.0',
-  //     name: 'app-no-actions'
-  //   },
-  //   root
-  // },
   'app-no-actions': {
     all: { ...applicationNoActionsSingleConfig },
     implements: [
