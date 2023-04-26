@@ -7,5 +7,9 @@
   },
   "rules": {
     "node/no-unpublished-require": 0
+  },
+  "extends": ["@adobe/eslint-config-aio-lib-config"],
+  "parserOptions": {
+    "ecmaVersion": "2020"
   }
 }
