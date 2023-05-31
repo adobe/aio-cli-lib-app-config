@@ -15,6 +15,8 @@ const yaml = require('js-yaml')
 const fs = require('fs-extra')
 const aioConfigLoader = require('@adobe/aio-lib-core-config')
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-cli-lib-app-config', { provider: 'debug' })
+const Ajv = require('ajv')
+const ajvAddFormats = require('ajv-formats')
 
 // give or take daylight savings, and leap seconds ...
 const AboutAWeekInSeconds = '604800'
@@ -72,6 +74,8 @@ const {
 const cloneDeep = require('lodash.clonedeep')
 
 /**
+ * Loads app builder configuration in the current working directory.
+ *
  * loading config returns following object (this config is internal, not user facing):
  *  {
  *    aio: {...aioConfig...},
@@ -130,24 +134,38 @@ const cloneDeep = require('lodash.clonedeep')
  * @returns {object} the config
  */
 function load (options = { allowNoImpl: false }) {
+  // I. load common config
   // configuration that is shared for application and each extension config
   // holds things like ow credentials, packagejson and aioConfig
   const commonConfig = loadCommonConfig()
   checkCommonConfig(commonConfig)
 
-  // user configuration is specified in app.config.yaml and holds both standalone app and extension configuration
-  // note that `$includes` directive will be resolved here
-  // also this will load and merge the standalone legacy configuration system if any
-  const { config: userConfig, includeIndex } = loadUserConfig(commonConfig)
+  // II. load app.config.yaml & validate + load/merge legacy configuration if any
+  // support backward compatibility, include legacy application configuration
+  const legacyAppConfigWithIndex = loadLegacyAppConfig(commonConfig)
+  let { config: appConfig, includeIndex } = legacyAppConfigWithIndex
+  if (fs.existsSync(defaults.USER_CONFIG_FILE)) {
+    // this will resolve $include directives and output the app config into a single object
+    // paths config values in $included files will be rewritten
+    const appConfigWithIndex = coalesceAppConfig(defaults.USER_CONFIG_FILE, { absolutePaths: true })
+    const { valid, errors } = validateAppConfig(appConfigWithIndex.config)
+    if (!valid) {
+      throw new Error(`Missing or invalid keys in ${defaults.USER_CONFIG_FILE}: ${JSON.stringify(errors, null, 2)}`)
+    }
+    // no validation on the legacy configuration, which will be deprecated eventually
+    const mergedAppConfig = mergeLegacyAppConfig(appConfigWithIndex, legacyAppConfigWithIndex)
 
-  // load the full standalone application and extension configurations
-  const all = buildAllConfigs(userConfig, commonConfig, includeIndex)
+    appConfig = mergedAppConfig.config
+    includeIndex = mergedAppConfig.includeIndex
+  }
 
+  // III. build output object
+  // full standalone application and extension configurations
+  const all = buildAllConfigs(appConfig, commonConfig, includeIndex)
   const impl = Object.keys(all).sort() // sort for predictable configuration
   if (!options.allowNoImpl && impl.length <= 0) {
     throw new Error(`Couldn't find configuration in '${process.cwd()}', make sure to add at least one extension or a standalone app`)
   }
-
   return {
     all,
     implements: impl, // e.g. 'dx/excshell/1', 'application'
@@ -158,6 +176,24 @@ function load (options = { allowNoImpl: false }) {
     packagejson: commonConfig.packagejson,
     root: process.cwd()
   }
+}
+
+/**
+ * to obtain appConfigObj run coalesceAppConfig ('app.config.yaml')
+ *
+ * @param appConfigObj
+ */
+function validateAppConfig (appConfigObj) {
+  /* eslint-disable-next-line node/no-unpublished-require */
+  const schema = require('../schema/app.config.yaml.schema.json')
+  const ajv = new Ajv({
+    allErrors: true,
+    allowUnionTypes: true
+  })
+  ajvAddFormats(ajv)
+
+  const validate = ajv.compile(schema)
+  return { valid: validate(appConfigObj), errors: validate.errors }
 }
 
 /** @private */
@@ -201,32 +237,14 @@ function checkCommonConfig (commonConfig) {
   // }
 }
 
-/** @private */
-function loadUserConfig (commonConfig) {
-  const { config: legacyConfig, includeIndex: legacyIncludeIndex } = loadUserConfigLegacy(commonConfig)
-  const { config, includeIndex } = coalesce(defaults.USER_CONFIG_FILE, { absolutePaths: true })
-
-  const ret = {}
-  // include legacy application configuration
-  ret.config = mergeLegacyUserConfig(config, legacyConfig)
-  // merge includeIndexes, new config index takes precedence
-  ret.includeIndex = { ...legacyIncludeIndex, ...includeIndex }
-
-  return ret
-}
-
 /**
  * Resolve all includes, update relative paths and return a full app configuration object
  *
  * @param {string} appConfigFile path to the app.config.yaml
+ * @param options
  * @returns {object} single appConfig with resolved includes
  */
-function coalesce (appConfigFile, options = { absolutePaths: false }) {
-  if (!fs.existsSync(appConfigFile)) {
-    // no error, support for legacy configuration
-    return { config: {}, includeIndex: {} }
-  }
-
+function coalesceAppConfig (appConfigFile, options = { absolutePaths: false }) {
   // this code is traversing app.config.yaml recursively to resolve all $includes directives
 
   const config = yaml.safeLoad(fs.readFileSync(appConfigFile, 'utf8'))
@@ -321,7 +339,7 @@ function coalesce (appConfigFile, options = { absolutePaths: false }) {
 }
 
 /** @private */
-function loadUserConfigLegacy (commonConfig) {
+function loadLegacyAppConfig (commonConfig) {
   // load legacy user app config from manifest.yml, package.json, .aio.app
   const includeIndex = {}
   const legacyAppConfig = {}
@@ -397,31 +415,35 @@ function loadUserConfigLegacy (commonConfig) {
 }
 
 /** @private */
-function mergeLegacyUserConfig (userConfig, legacyUserConfig) {
-  // NOTE: here we do a simplified merge, deep merge with copy might be wanted in future
+function mergeLegacyAppConfig (appConfig, legacyAppConfig) {
+  // NOTE: here we do a simplified merge, deep merge with copy might be wanted
 
-  // only need to merge application configs as legacy config system only works for standalone apps
-  const userConfigApp = userConfig[defaults.APPLICATION_CONFIG_KEY]
-  const legacyUserConfigApp = legacyUserConfig[defaults.APPLICATION_CONFIG_KEY]
+  // only need to merge application configs as legacy config system does not work with extensions
+  const application = appConfig.config[defaults.APPLICATION_CONFIG_KEY]
+  const legacyApplication = legacyAppConfig.config[defaults.APPLICATION_CONFIG_KEY]
 
   // merge 1 level config fields, such as 'actions': 'path/to/actions', precedence for new config
-  const mergedApp = { ...legacyUserConfigApp, ...userConfigApp }
+  const mergedApplication = { ...legacyApplication, ...application }
 
   // special cases if both are defined
-  if (legacyUserConfigApp && userConfigApp) {
+  if (application && legacyApplication) {
     // for simplicity runtimeManifest is not merged, it's one or the other
-    if (legacyUserConfigApp.runtimeManifest && userConfigApp.runtimeManifest) {
+    if (legacyApplication.runtimeManifest && application.runtimeManifest) {
       aioLogger.warn('\'manifest.yml\' is ignored in favor of key \'runtimeManifest\' in \'app.config.yaml\'.')
     }
     // hooks are merged
-    if (legacyUserConfigApp.hooks && userConfigApp.hooks) {
-      mergedApp.hooks = { ...legacyUserConfigApp.hooks, ...userConfigApp.hooks }
+    if (legacyApplication.hooks && application.hooks) {
+      mergedApplication.hooks = { ...legacyApplication.hooks, ...application.hooks }
     }
   }
 
   return {
-    ...userConfig,
-    [defaults.APPLICATION_CONFIG_KEY]: mergedApp
+    config: {
+      ...appConfig.config,
+      [defaults.APPLICATION_CONFIG_KEY]: mergedApplication
+    },
+    // new configuration index takes precedence
+    includeIndex: { ...legacyAppConfig.includeIndex, ...appConfig.includeIndex }
   }
 }
 
@@ -603,12 +625,11 @@ function resolveToRoot (pathValue, includedFromConfigPath, options = {}) {
   // path.resolve => support both absolute pathValue and relative (relative joins with
   // config dir and process.cwd, absolute returns pathValue)
   return options.absolutePaths ? path.resolve(path.dirname(includedFromConfigPath), pathValue) : path.join(path.dirname(includedFromConfigPath), pathValue)
-
-  // TODO if hook return `cd folder && <hookCMD>` (but needs to work on windows too..)
 }
 
 module.exports = {
   load,
-  // validate,
-  coalesce
+  validateAppConfig,
+  coalesceAppConfig
+
 }
