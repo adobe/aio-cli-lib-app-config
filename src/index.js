@@ -180,9 +180,10 @@ function load (options = { allowNoImpl: false }) {
 }
 
 /**
- * to obtain appConfigObj run coalesceAppConfig ('app.config.yaml')
+ * Validates an appConfigObj.
  *
- * @param appConfigObj
+ * @param {object} appConfigObj To obtain appConfigObj run coalesceAppConfig ('app.config.yaml')
+ * @returns {object} {valid, errors}
  */
 function validateAppConfig (appConfigObj) {
   /* eslint-disable-next-line node/no-unpublished-require */
@@ -242,7 +243,8 @@ function checkCommonConfig (commonConfig) {
  * Resolve all includes, update relative paths and return a full app configuration object
  *
  * @param {string} appConfigFile path to the app.config.yaml
- * @param options
+ * @param {object} options options
+ * @param {object} options.absolutePaths boolean, resolve path to be absolute, defaults to relative to root folder.
  * @returns {object} single appConfig with resolved includes
  */
 function coalesceAppConfig (appConfigFile, options = { absolutePaths: false }) {
