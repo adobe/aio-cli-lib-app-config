@@ -658,7 +658,10 @@ function buildSingleConfig (configName, singleUserConfig, commonConfig, includeI
 function resolveToRoot (pathValue, includedFromConfigPath, options = {}) {
   // path.resolve => support both absolute pathValue and relative (relative joins with
   // config dir and process.cwd, absolute returns pathValue)
-  return options.absolutePaths ? path.resolve(path.dirname(includedFromConfigPath), pathValue) : path.join(path.dirname(includedFromConfigPath), pathValue)
+  // if relative keep unix paths
+  return options.absolutePaths
+    ? path.resolve(path.dirname(includedFromConfigPath), pathValue)
+    : path.join(path.dirname(includedFromConfigPath).split(path.sep).join(path.posix.sep), pathValue)
 }
 
 module.exports = {

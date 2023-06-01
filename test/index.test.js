@@ -10,6 +10,10 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
+const winCompat = p => {
+  return p.startsWith('/') ? path.resolve(p) : path.normalize(p) // path.resolve to get C or D
+}
+
 global.mockFs()
 const appConfig = require('../src')
 const mockAIOConfig = require('@adobe/aio-lib-core-config')
@@ -578,7 +582,7 @@ describe('coalesce config', () => {
   test('complex include config, absolute paths', async () => {
     global.loadFixtureApp('exc-complex-includes')
     coalesced = appConfig.coalesceAppConfig('app.config.yaml', { absolutePaths: true }) // {} or not for coverage
-    expect(coalesced.config).toEqual({ extensions: { 'dx/excshell/1': { actions: '/src/dx-excshell-1/actions', operations: { view: [{ impl: 'index.html', type: 'web' }] }, runtimeManifest: { packages: { 'my-exc-package': { actions: { action: { annotations: { final: true, 'require-adobe-auth': true }, function: '/src/dx-excshell-1/actions/action.js', include: [['/src/dx-excshell-1/actions/somefile.txt', 'file.txt']], inputs: { LOG_LEVEL: 'debug' }, limits: { concurrency: 189 }, runtime: 'nodejs:14', web: 'yes' } }, license: 'Apache-2.0' } } }, web: '/src/dx-excshell-1/web-src' } } })
+    expect(coalesced.config).toEqual({ extensions: { 'dx/excshell/1': { actions: winCompat('/src/dx-excshell-1/actions'), operations: { view: [{ impl: 'index.html', type: 'web' }] }, runtimeManifest: { packages: { 'my-exc-package': { actions: { action: { annotations: { final: true, 'require-adobe-auth': true }, function: winCompat('/src/dx-excshell-1/actions/action.js'), include: [[winCompat('/src/dx-excshell-1/actions/somefile.txt'), 'file.txt']], inputs: { LOG_LEVEL: 'debug' }, limits: { concurrency: 189 }, runtime: 'nodejs:14', web: 'yes' } }, license: 'Apache-2.0' } } }, web: winCompat('/src/dx-excshell-1/web-src') } } })
     // pick some
     expect(coalesced.includeIndex.extensions).toEqual({ file: 'app.config.yaml', key: 'extensions' })
     expect(coalesced.includeIndex['extensions.dx/excshell/1']).toEqual({ file: 'app.config2.yaml', key: 'dx/excshell/1' })
