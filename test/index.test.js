@@ -435,4 +435,155 @@ application:
     config = appConfig.load({})
     expect(config.all.application.web['response-headers']).toEqual({ '/*': { testHeader: 'foo' } })
   })
+
+  test('invalid schema: web.res-header instead of web.response-headers', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          web:
+            res-header:
+              /*:
+                testHeader: foo
+          runtimeManifest:
+            packages: {}
+`
+      }
+    )
+    expect(() => appConfig.load({})).toThrow('Missing or invalid keys in app.config.yaml')
+  })
+
+  test('invalid schema: runtimeManifest has no packages', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          web:
+            res-header:
+              /*:
+                testHeader: foo
+          runtimeManifest: {}
+`
+      }
+    )
+    expect(() => appConfig.load({})).toThrow('Missing or invalid keys in app.config.yaml')
+  })
+
+  test('invalid schema: configSchema has no items', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          configSchema: []
+`
+      }
+    )
+    expect(() => appConfig.load({})).toThrow('Missing or invalid keys in app.config.yaml')
+  })
+
+  test('invalid schema: configSchema has an item without envKey', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          configSchema:
+            - type: string
+`
+      }
+    )
+    expect(() => appConfig.load({})).toThrow('Missing or invalid keys in app.config.yaml')
+  })
+
+  test('invalid schema: configSchema has an item without type', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          configSchema:
+            - envKey: HELLO
+`
+      }
+    )
+    expect(() => appConfig.load({})).toThrow('Missing or invalid keys in app.config.yaml')
+  })
+
+  test('invalid schema: configSchema with an additional property', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          configSchema:
+            - envKey: HELLO
+              type: string
+              somenotallowed: prop
+`
+      }
+    )
+    expect(() => appConfig.load({})).toThrow('Missing or invalid keys in app.config.yaml')
+  })
+
+  test('valid configSchema', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          runtimeManifest: { packages: {}}
+          configSchema:
+            - envKey: HELLO
+              type: string
+              secret: true
+              default: hello
+              title: yo
+              enum:
+                - hello
+                - hola
+                - bonjour
+`
+      }
+    )
+    expect(() => appConfig.load({})).not.toThrow()
+  })
+})
+
+describe('coalesce config', () => {
+  let coalesced
+  beforeEach(async () => {
+    // two calls to aio config are made let's mock them
+    mockAIOConfig.get.mockImplementation(k => global.fakeConfig.tvm)
+    process.chdir('/')
+    // empty all fake files
+    global.fakeFileSystem.clear()
+    libEnv.getCliEnv.mockReturnValue('prod')
+  })
+
+  test('complex include config, relative paths', async () => {
+    global.loadFixtureApp('exc-complex-includes')
+    coalesced = appConfig.coalesceAppConfig('app.config.yaml') // {} or not for coverage
+    expect(coalesced.config).toEqual({ extensions: { 'dx/excshell/1': { actions: 'src/dx-excshell-1/actions', operations: { view: [{ impl: 'index.html', type: 'web' }] }, runtimeManifest: { packages: { 'my-exc-package': { actions: { action: { annotations: { final: true, 'require-adobe-auth': true }, function: 'src/dx-excshell-1/actions/action.js', include: [['src/dx-excshell-1/actions/somefile.txt', 'file.txt']], inputs: { LOG_LEVEL: 'debug' }, limits: { concurrency: 189 }, runtime: 'nodejs:14', web: 'yes' } }, license: 'Apache-2.0' } } }, web: 'src/dx-excshell-1/web-src' } } })
+    // pick some
+    expect(coalesced.includeIndex.extensions).toEqual({ file: 'app.config.yaml', key: 'extensions' })
+    expect(coalesced.includeIndex['extensions.dx/excshell/1']).toEqual({ file: 'app.config2.yaml', key: 'dx/excshell/1' })
+    expect(coalesced.includeIndex['extensions.dx/excshell/1.runtimeManifest']).toEqual({ file: 'src/dx-excshell-1/ext.config.yaml', key: 'runtimeManifest' })
+    expect(coalesced.includeIndex['extensions.dx/excshell/1.runtimeManifest.packages.my-exc-package.actions']).toEqual({ file: 'src/dx-excshell-1/actions/pkg.manifest.yaml', key: 'packages.my-exc-package.actions' })
+    expect(coalesced.includeIndex['extensions.dx/excshell/1.runtimeManifest.packages.my-exc-package.actions.action']).toEqual({ file: 'src/dx-excshell-1/actions/sub/action.manifest.yaml', key: 'action' })
+  })
+
+  test('complex include config, absolute paths', async () => {
+    global.loadFixtureApp('exc-complex-includes')
+    coalesced = appConfig.coalesceAppConfig('app.config.yaml', { absolutePaths: true }) // {} or not for coverage
+    expect(coalesced.config).toEqual({ extensions: { 'dx/excshell/1': { actions: '/src/dx-excshell-1/actions', operations: { view: [{ impl: 'index.html', type: 'web' }] }, runtimeManifest: { packages: { 'my-exc-package': { actions: { action: { annotations: { final: true, 'require-adobe-auth': true }, function: '/src/dx-excshell-1/actions/action.js', include: [['/src/dx-excshell-1/actions/somefile.txt', 'file.txt']], inputs: { LOG_LEVEL: 'debug' }, limits: { concurrency: 189 }, runtime: 'nodejs:14', web: 'yes' } }, license: 'Apache-2.0' } } }, web: '/src/dx-excshell-1/web-src' } } })
+    // pick some
+    expect(coalesced.includeIndex.extensions).toEqual({ file: 'app.config.yaml', key: 'extensions' })
+    expect(coalesced.includeIndex['extensions.dx/excshell/1']).toEqual({ file: 'app.config2.yaml', key: 'dx/excshell/1' })
+    expect(coalesced.includeIndex['extensions.dx/excshell/1.runtimeManifest']).toEqual({ file: 'src/dx-excshell-1/ext.config.yaml', key: 'runtimeManifest' })
+    expect(coalesced.includeIndex['extensions.dx/excshell/1.runtimeManifest.packages.my-exc-package.actions']).toEqual({ file: 'src/dx-excshell-1/actions/pkg.manifest.yaml', key: 'packages.my-exc-package.actions' })
+    expect(coalesced.includeIndex['extensions.dx/excshell/1.runtimeManifest.packages.my-exc-package.actions.action']).toEqual({ file: 'src/dx-excshell-1/actions/sub/action.manifest.yaml', key: 'action' })
+  })
 })

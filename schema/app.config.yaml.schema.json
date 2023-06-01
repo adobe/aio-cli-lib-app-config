@@ -56,20 +56,18 @@
         {
           "type": "object",
           "properties": {
+            "src": { "type": "string" },
             "response-headers": {
               "type": "object",
               "patternProperties": {
                 "^[^\n]+$": {
                   "type":"object",
-                  "patternProperties": {
-                    "^[a-zA-Z0-9\\-_]+$": {
-                      "type":"string"
-                    }
-                  }
+                  "patternProperties": { "^[^\n]+$": { "type":"string" } }
                 }
               }
             }
-          }
+          },
+          "additionalProperties": false
         }
       ]
     },
@@ -168,7 +166,8 @@
           "default": { "$ref": "#/definitions/configSchemaValue" },
           "secret": { "type": "boolean" }
         },
-        "required": ["type", "envKey"]
+        "required": ["type", "envKey"],
+        "additionalProperties": false
       }
     },
     "configSchemaValue": { "type": "string", "maxLength": 1000 }

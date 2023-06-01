@@ -512,8 +512,9 @@ function buildAppConfig (userConfig, commonConfig, includeIndex) {
     commonConfig,
     includeIndex)
 
+  // todo: this needs to be updated; an app doesn't exist if there is no config.
   if (!fullAppConfig.app.hasBackend && !fullAppConfig.app.hasFrontend) {
-    // only set application config if there is an actuall app, meaning either some backend or frontend
+    // only set application config if there is an actual app, meaning either some backend or frontend
     return {}
   }
   return { [defaults.APPLICATION_CONFIG_KEY]: fullAppConfig }
@@ -653,9 +654,6 @@ function buildSingleConfig (configName, singleUserConfig, commonConfig, includeI
 // identified and their value is rewritten relative to the root folder.
 /** @private */
 function resolveToRoot (pathValue, includedFromConfigPath, options = {}) {
-  if (!pathValue || !includedFromConfigPath) {
-    return undefined
-  }
   // path.resolve => support both absolute pathValue and relative (relative joins with
   // config dir and process.cwd, absolute returns pathValue)
   return options.absolutePaths ? path.resolve(path.dirname(includedFromConfigPath), pathValue) : path.join(path.dirname(includedFromConfigPath), pathValue)
