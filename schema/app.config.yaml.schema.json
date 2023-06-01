@@ -6,25 +6,19 @@
     "application": { "$ref": "#/definitions/application" },
     "extensions": { "$ref": "#/definitions/extensions" }
   },
-  "oneOf": [
+  "anyOf": [
     {
-      "required": ["application"],
-      "allOf": [
-        { "not": { "required": ["extensions"] } }
-      ]
+      "required": ["application"]
     },
     {
-      "required": ["extensions"],
-      "allOf": [
-        { "not": { "required": ["application"] } }
-      ]
+      "required": ["extensions"]
     }
   ],
   "definitions": {
     "extensions": {
       "type": "object",
       "patternProperties": {
-        "^[A-Za-z0-9-_/\u00C0-\u00D6\u00D8-\u00f6\u00f8-\u00ff]{1,20}$": {
+        "^[A-Za-z0-9-_/\\-]+$": {
           "$ref": "#/definitions/application"
         }
       },
@@ -62,7 +56,19 @@
         {
           "type": "object",
           "properties": {
-            "response-headers": { "type": "object" }
+            "response-headers": {
+              "type": "object",
+              "patternProperties": {
+                "^[^\n]+$": {
+                  "type":"object",
+                  "patternProperties": {
+                    "^[a-zA-Z0-9\\-_]+$": {
+                      "type":"string"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       ]
@@ -108,7 +114,7 @@
         "inputs": { "$ref": "#/definitions/inputs" },
         "annotations": { "$ref": "#/definitions/annotations" }
       },
-      "required": ["function", "runtime"]
+      "required": []
     },
     "inputs": {
       "type": "object",

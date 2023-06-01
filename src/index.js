@@ -142,8 +142,10 @@ function load (options = { allowNoImpl: false }) {
 
   // II. load app.config.yaml & validate + load/merge legacy configuration if any
   // support backward compatibility, include legacy application configuration
-  const legacyAppConfigWithIndex = loadLegacyAppConfig(commonConfig)
+  const legacyAppConfigWithIndex = legacyToAppConfig(commonConfig)
   let { config: appConfig, includeIndex } = legacyAppConfigWithIndex
+  // no validation on the legacy configuration, which will be deprecated eventually
+
   if (fs.existsSync(defaults.USER_CONFIG_FILE)) {
     // this will resolve $include directives and output the app config into a single object
     // paths config values in $included files will be rewritten
@@ -152,7 +154,6 @@ function load (options = { allowNoImpl: false }) {
     if (!valid) {
       throw new Error(`Missing or invalid keys in ${defaults.USER_CONFIG_FILE}: ${JSON.stringify(errors, null, 2)}`)
     }
-    // no validation on the legacy configuration, which will be deprecated eventually
     const mergedAppConfig = mergeLegacyAppConfig(appConfigWithIndex, legacyAppConfigWithIndex)
 
     appConfig = mergedAppConfig.config
@@ -291,11 +292,6 @@ function coalesceAppConfig (appConfigFile, options = { absolutePaths: false }) {
       continue
     }
 
-    if (typeof value === 'string' && PATH_KEYS.filter(reg => fullIndexKey.match(reg)).length) {
-      // rewrite path value to be relative to the root instead of being relative to the config file that includes it
-      parentObj[key] = resolveToRoot(value, currConfigFile, { absolutePaths: options.absolutePaths })
-    }
-
     if (key === defaults.INCLUDE_DIRECTIVE) {
       // $include: 'configFile', value is string pointing to config file
       // includes are relative to the current config file
@@ -333,13 +329,15 @@ function coalesceAppConfig (appConfigFile, options = { absolutePaths: false }) {
 
     // else primitive types: do nothing
   }
-  // RETURN
-  // $includes are now resolved
-  return { config, includeIndex }
+
+  const appConfigWithIncludeIndex = { config, includeIndex }
+  rewritePathsInPlace(appConfigWithIncludeIndex, { absolutePaths: options.absolutePaths })
+
+  return appConfigWithIncludeIndex
 }
 
 /** @private */
-function loadLegacyAppConfig (commonConfig) {
+function legacyToAppConfig (commonConfig) {
   // load legacy user app config from manifest.yml, package.json, .aio.app
   const includeIndex = {}
   const legacyAppConfig = {}
@@ -406,21 +404,57 @@ function loadLegacyAppConfig (commonConfig) {
     }
   }
 
-  if (Object.keys(includeIndex).length > 0) {
-    // add the top key
-    includeIndex[`${defaults.APPLICATION_CONFIG_KEY}`] = { file: '.aio', key: 'app' }
+  const appConfigWithIncludeIndex = { includeIndex, config: { [defaults.APPLICATION_CONFIG_KEY]: legacyAppConfig } }
+  if (Object.keys(includeIndex).length <= 0) {
+    // no legacy configuration return now
+    // todo return undefined here and for normal config, rewrite load and merge logic
+    return appConfigWithIncludeIndex
   }
 
-  return { includeIndex, config: { [defaults.APPLICATION_CONFIG_KEY]: legacyAppConfig } }
+  // add the top key
+  includeIndex[`${defaults.APPLICATION_CONFIG_KEY}`] = { file: '.aio', key: 'app' }
+
+  /* always absolute paths for now. Note that if we were interested in relative
+  paths there would be no need to rewrite, as all paths are
+  defined in the app root folder for legacy apps */
+  rewritePathsInPlace(appConfigWithIncludeIndex, { absolutePaths: true })
+
+  return appConfigWithIncludeIndex
 }
 
 /** @private */
-function mergeLegacyAppConfig (appConfig, legacyAppConfig) {
+function rewritePathsInPlace (appConfigWithIncludeIndex, options) {
+  const { config: appConfig, includeIndex } = appConfigWithIncludeIndex
+
+  const buildStackEntries = (currObj, currFullKey) => Object.keys(currObj || {} /* cover for null */).map(k => {
+    const fullKey = currFullKey ? currFullKey + '.' + k : k
+    const includedFromConfigFile = includeIndex[fullKey].file
+    return { fullKey, includedFromConfigFile, key: k, parentObj: currObj }
+  })
+  const stack = buildStackEntries(appConfig)
+
+  while (stack.length > 0) {
+    const { fullKey, includedFromConfigFile, key, parentObj } = stack.pop()
+    const value = parentObj[key]
+
+    if (typeof value === 'string' && PATH_KEYS.filter(reg => fullKey.match(reg)).length) {
+      // rewrite path value to be relative to the root instead of being relative to the config file that includes it
+      parentObj[key] = resolveToRoot(value, includedFromConfigFile, { absolutePaths: options.absolutePaths })
+    }
+    if (typeof value === 'object') {
+      // object or Array
+      stack.push(...buildStackEntries(value, fullKey))
+    }
+  }
+}
+
+/** @private */
+function mergeLegacyAppConfig (appConfigWithIncludeIndex, legacyAppConfigWithIncludeIndex) {
   // NOTE: here we do a simplified merge, deep merge with copy might be wanted
 
   // only need to merge application configs as legacy config system does not work with extensions
-  const application = appConfig.config[defaults.APPLICATION_CONFIG_KEY]
-  const legacyApplication = legacyAppConfig.config[defaults.APPLICATION_CONFIG_KEY]
+  const application = appConfigWithIncludeIndex.config[defaults.APPLICATION_CONFIG_KEY]
+  const legacyApplication = legacyAppConfigWithIncludeIndex.config[defaults.APPLICATION_CONFIG_KEY]
 
   // merge 1 level config fields, such as 'actions': 'path/to/actions', precedence for new config
   const mergedApplication = { ...legacyApplication, ...application }
@@ -439,11 +473,11 @@ function mergeLegacyAppConfig (appConfig, legacyAppConfig) {
 
   return {
     config: {
-      ...appConfig.config,
+      ...appConfigWithIncludeIndex.config,
       [defaults.APPLICATION_CONFIG_KEY]: mergedApplication
     },
     // new configuration index takes precedence
-    includeIndex: { ...legacyAppConfig.includeIndex, ...appConfig.includeIndex }
+    includeIndex: { ...legacyAppConfigWithIncludeIndex.includeIndex, ...appConfigWithIncludeIndex.includeIndex }
   }
 }
 
@@ -631,5 +665,4 @@ module.exports = {
   load,
   validateAppConfig,
   coalesceAppConfig
-
 }

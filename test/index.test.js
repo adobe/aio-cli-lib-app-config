@@ -11,7 +11,7 @@ governing permissions and limitations under the License.
 */
 
 global.mockFs()
-const loadConfig = require('../src')
+const appConfig = require('../src')
 const mockAIOConfig = require('@adobe/aio-lib-core-config')
 
 const yaml = require('js-yaml')
@@ -35,7 +35,7 @@ describe('load config', () => {
   // main cases
   test('standalone app config', async () => {
     global.loadFixtureApp('app')
-    config = loadConfig() // {} or not for coverage
+    config = appConfig.load() // {} or not for coverage
     const mockConfig = getMockConfig('app', global.fakeConfig.tvm, {
       'all.application.project': expect.any(Object)
     })
@@ -44,12 +44,12 @@ describe('load config', () => {
 
   test('not in an app', async () => {
     global.loadFixtureApp('not-in-app')
-    expect(() => loadConfig()).toThrow(new Error('package.json: ENOENT: no such file or directory, open \'package.json\''))
+    expect(() => appConfig.load()).toThrow(new Error('package.json: ENOENT: no such file or directory, open \'package.json\''))
   })
 
   test('exc extension config', async () => {
     global.loadFixtureApp('exc')
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1': expect.any(Object)
     }))
@@ -57,13 +57,13 @@ describe('load config', () => {
 
   test('exc with events config', async () => {
     global.loadFixtureApp('exc-with-events')
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config.all['dx/excshell/1']).toEqual(expect.objectContaining({ events: expect.any(Object) }))
   })
 
   test('standalone app, exc and nui extension config', async () => {
     global.loadFixtureApp('app-exc-nui')
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('app-exc-nui', global.fakeConfig.tvm, {
       'all.application.project': expect.any(Object),
       'all.dx/excshell/1.project': expect.any(Object),
@@ -73,7 +73,7 @@ describe('load config', () => {
 
   test('standalone app with no actions', async () => {
     global.loadFixtureApp('app-no-actions')
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('app-no-actions', global.fakeConfig.tvm, {
       'all.application.project': expect.any(Object),
       'all.application.events': expect.undefined
@@ -82,7 +82,7 @@ describe('load config', () => {
 
   test('exc with complex include pattern', async () => {
     global.loadFixtureApp('exc-complex-includes')
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('exc-complex-includes', global.fakeConfig.tvm, {
       'all.dx/excshell/1.project': expect.any(Object)
     }))
@@ -93,7 +93,7 @@ describe('load config', () => {
     const fullAioConfig = { app: global.aioLegacyAppConfig, ...global.fakeConfig.tvm }
     // mock app config
     mockAIOConfig.get.mockImplementation(k => fullAioConfig)
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('legacy-app', fullAioConfig, {
       'all.application.project': expect.any(Object)
     }))
@@ -103,7 +103,7 @@ describe('load config', () => {
   test('exc with default package.json name & version', async () => {
     global.loadFixtureApp('exc')
     global.fakeFileSystem.addJson({ '/package.json': '{}' })
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       // will set defaults
       'all.dx/excshell/1.app.name': 'unnamed-app',
@@ -122,7 +122,7 @@ describe('load config', () => {
     userConfig.dist = 'new/dist/for/excshell'
     global.fakeFileSystem.addJson({ '/src/dx-excshell-1/ext.config.yaml': yaml.dump(userConfig) })
 
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.app.dist': path.resolve('/src/dx-excshell-1/new/dist/for/excshell'),
       'all.dx/excshell/1.actions.dist': path.resolve('/src/dx-excshell-1/new/dist/for/excshell/actions'),
@@ -142,7 +142,7 @@ describe('load config', () => {
     userConfig.s3bucket = 'fakebucket'
     global.fakeFileSystem.addJson({ '/src/dx-excshell-1/ext.config.yaml': yaml.dump(userConfig) })
 
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.s3.creds': {
         accessKeyId: 'fakeid',
@@ -161,7 +161,7 @@ describe('load config', () => {
     userConfig.tvmurl = 'customurl'
     global.fakeFileSystem.addJson({ '/src/dx-excshell-1/ext.config.yaml': yaml.dump(userConfig) })
 
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.s3.tvmUrl': 'customurl',
       'all.dx/excshell/1.project': expect.any(Object),
@@ -176,7 +176,7 @@ describe('load config', () => {
     userConfig.tvmurl = 'https://firefly-tvm.adobe.io'
     global.fakeFileSystem.addJson({ '/src/dx-excshell-1/ext.config.yaml': yaml.dump(userConfig) })
 
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.project': expect.any(Object),
       includeIndex: expect.any(Object)
@@ -190,7 +190,7 @@ describe('load config', () => {
     userConfig.runtimeManifest.packages['my-exc-package'].actions.newAction = { web: 'yes' }
     global.fakeFileSystem.addJson({ '/src/dx-excshell-1/ext.config.yaml': yaml.dump(userConfig) })
 
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.manifest.full.packages.my-exc-package.actions.newAction': { web: 'yes' },
       'all.dx/excshell/1.project': expect.any(Object),
@@ -202,7 +202,7 @@ describe('load config', () => {
     libEnv.getCliEnv.mockReturnValue('stage')
     global.loadFixtureApp('exc')
 
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.app.defaultHostname': 'dev.runtime.adobe.io',
       'all.dx/excshell/1.app.hostname': 'dev.runtime.adobe.io',
@@ -221,17 +221,17 @@ extensions:
     no: 'operations'
 `
     })
-    expect(() => loadConfig({})).toThrow('Missing \'operations\'')
+    expect(() => appConfig.load({})).toThrow('Missing \'operations\'')
   })
 
   test('no implementation - allowNoImpl=false', async () => {
-    global.fakeFileSystem.addJson({ '/package.json': '{}', '/app.config.yaml': '{}' })
-    expect(() => loadConfig({})).toThrow('Couldn\'t find configuration')
+    global.fakeFileSystem.addJson({ '/package.json': '{}' })
+    expect(() => appConfig.load({})).toThrow('Couldn\'t find configuration')
   })
 
   test('no implementation - allowNoImpl=true', async () => {
-    global.fakeFileSystem.addJson({ '/package.json': '{}', '/app.config.yaml': '{}' })
-    config = loadConfig({ allowNoImpl: true })
+    global.fakeFileSystem.addJson({ '/package.json': '{}' })
+    config = appConfig.load({ allowNoImpl: true })
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       all: {},
       implements: [],
@@ -244,7 +244,7 @@ extensions:
   test('exc - no aio config', async () => {
     global.loadFixtureApp('exc')
     mockAIOConfig.get.mockImplementation(k => {})
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', {}))
   })
 
@@ -262,7 +262,7 @@ extensions:
 '$include: ../b.yaml'
       }
     )
-    expect(() => loadConfig({})).toThrow('Detected \'$include\' cycle: \'app.config.yaml,b.yaml,dir/c.yaml,b.yaml\'')
+    expect(() => appConfig.load({})).toThrow('Detected \'$include\' cycle: \'app.config.yaml,b.yaml,dir/c.yaml,b.yaml\'')
   })
 
   test('include does not exist', async () => {
@@ -272,7 +272,7 @@ extensions:
         '/app.config.yaml': '$include: b.yaml'
       }
     )
-    expect(() => loadConfig({})).toThrow('\'$include: b.yaml\' cannot be resolved')
+    expect(() => appConfig.load({})).toThrow('\'$include: b.yaml\' cannot be resolved')
   })
 
   test('include does not resolve to object - string', async () => {
@@ -283,7 +283,7 @@ extensions:
         '/b.yaml': 'string'
       }
     )
-    expect(() => loadConfig({})).toThrow('\'$include: b.yaml\' does not resolve to an object')
+    expect(() => appConfig.load({})).toThrow('\'$include: b.yaml\' does not resolve to an object')
   })
 
   test('include does not resolve to object - arraay', async () => {
@@ -294,7 +294,7 @@ extensions:
         '/b.yaml': '[1,2,3]'
       }
     )
-    expect(() => loadConfig({})).toThrow('\'$include: b.yaml\' does not resolve to an object')
+    expect(() => appConfig.load({})).toThrow('\'$include: b.yaml\' does not resolve to an object')
   })
 
   test('legacy-app - no hooks', async () => {
@@ -306,7 +306,7 @@ extensions:
     const fullAioConfig = { app: global.aioLegacyAppConfig, ...global.fakeConfig.tvm }
     // mock app config
     mockAIOConfig.get.mockImplementation(k => fullAioConfig)
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('legacy-app', fullAioConfig, {
       'all.application.hooks': {},
       // 'all.application.events': expect.any(Object),
@@ -325,15 +325,15 @@ extensions:
     another-hook: 'will be merged'
   runtimeManifest:
     packages:
-      thepackage: 'takesover'`
+      thepackage: {}`
     })
     const fullAioConfig = { app: global.aioLegacyAppConfig, ...global.fakeConfig.tvm }
     // mock app config
     mockAIOConfig.get.mockImplementation(k => fullAioConfig)
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config).toEqual(getMockConfig('legacy-app', fullAioConfig, {
       'all.application.manifest.full': {
-        packages: { thepackage: 'takesover' }
+        packages: { thepackage: {} }
       },
       // 'all.application.events': expect.any(Object),
       'all.application.project': expect.any(Object),
@@ -355,12 +355,12 @@ extensions:
         '/app.config.yaml': `
 application:
   runtimeManifest:
-    iam: empty
+    packages: {}
 `
       }
     )
-    config = loadConfig({})
-    expect(config.all.application.manifest.full).toEqual({ iam: 'empty' })
+    config = appConfig.load({})
+    expect(config.all.application.manifest.full).toEqual({ packages: {} })
   })
 
   test('manifest with response headers and web src', async () => {
@@ -375,11 +375,11 @@ application:
               /*:
                 testHeader: foo
           runtimeManifest:
-            iam: empty
+            packages: {}
 `
       }
     )
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config.all.application.web['response-headers']).toEqual({ '/*': { testHeader: 'foo' } })
   })
 
@@ -403,7 +403,7 @@ application:
               /test/folder/*:
                 testHeader: folderFoo
           runtimeManifest:
-            iam: empty
+            packages: {}
 `
       }
     )
@@ -413,7 +413,7 @@ application:
       '/*.js': { testHeader: 'jsFoo' },
       '/test/folder/*': { testHeader: 'folderFoo' }
     }
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config.all.application.web['response-headers']).toEqual(expectedRes)
   })
 
@@ -428,11 +428,11 @@ application:
               /*:
                 testHeader: foo
           runtimeManifest:
-            iam: empty
+            packages: {}
 `
       }
     )
-    config = loadConfig({})
+    config = appConfig.load({})
     expect(config.all.application.web['response-headers']).toEqual({ '/*': { testHeader: 'foo' } })
   })
 })
