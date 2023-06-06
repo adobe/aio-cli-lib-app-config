@@ -37,7 +37,7 @@
         "awsaccesskeyid": { "type": "string" },
         "awssecretaccesskey": { "type": "string" },
         "s3bucket": { "type": "string" },
-        "events": { "type": "object" },
+        "events": { "$ref": "#/definitions/events" },
         "hostname": { "type": "string" },
         "htmlcacheduration": { "type": "number" },
         "jscacheduration": { "type": "number" },
@@ -81,7 +81,7 @@
     "packages": {
       "type": "object",
       "patternProperties": {
-        "^[A-Za-z0-9-_\u00C0-\u00D6\u00D8-\u00f6\u00f8-\u00ff]{1,20}$": {
+        "^[^\n]+$": {
           "$ref": "#/definitions/package"
         }
       },
@@ -97,7 +97,7 @@
     "actions": {
       "type": "object",
       "patternProperties": {
-        "^[A-Za-z0-9-_\u00C0-\u00D6\u00D8-\u00f6\u00f8-\u00ff]{1,20}$": {
+        "^[^\n]+$": {
           "$ref": "#/definitions/action"
         }
       },
@@ -117,7 +117,7 @@
     "inputs": {
       "type": "object",
       "patternProperties": {
-        "^[A-Za-z0-9-_\u00C0-\u00D6\u00D8-\u00f6\u00f8-\u00ff]{1,20}$": {
+        "^[^\n]+$": {
           "type": ["string", "boolean"]
         }
       },
@@ -126,7 +126,7 @@
     "annotations": {
       "type": "object",
       "patternProperties": {
-        "^[A-Za-z0-9-_\u00C0-\u00D6\u00D8-\u00f6\u00f8-\u00ff]{1,20}$": {
+        "^[^\n]+$": {
           "type": ["string", "boolean"]
         }
       },
@@ -150,6 +150,33 @@
         "pre-app-run": { "type": "string" },
         "post-app-run": { "type": "string" },
         "serve-static": { "type": "string" }
+      }
+    },
+    "events": {
+      "type": "object",
+      "properties": {
+        "registrations": {
+          "type": "object",
+          "patternProperties": {
+            "^[^\n]+$": {
+              "type": "object",
+              "properties": {
+                "description": { "type": "string" },
+                "events_of_interest": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "provider_metadata": { "type": "string" },
+                      "event_codes": { "type": "array" }
+                    }
+                  }
+                },
+                "runtime_action": {"type": "string" }
+              }
+            }
+          }
+        }
       }
     },
     "configSchema": {
