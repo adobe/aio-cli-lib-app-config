@@ -225,7 +225,52 @@ extensions:
     no: 'operations'
 `
     })
-    expect(() => appConfig.load({})).toThrow('Missing \'operations\'')
+    expect(() => appConfig.load({})).toThrow("must have required property 'operations'")
+  })
+
+  test('throw extension with 0 operations', async () => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{}',
+      '/app.config.yaml':
+`
+extensions:
+  dx/excshell/1:
+    operations: {}
+`
+    })
+    expect(() => appConfig.load({})).toThrow('must NOT have fewer than 1 properties')
+  })
+
+  test('throw extension with 1 operations that has 0 items', async () => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{}',
+      '/app.config.yaml':
+`
+extensions:
+  dx/excshell/1:
+    operations: {
+      "some-op": []
+    }
+`
+    })
+    expect(() => appConfig.load({})).toThrow('must NOT have fewer than 1 items')
+  })
+
+  test('extension missing runtimeManifest packages', async () => {
+    // this test is to ensure that application fields are required aswell
+    global.fakeFileSystem.addJson({
+      '/package.json': '{}',
+      '/app.config.yaml':
+`
+extensions:
+  dx/excshell/1:
+    operations: {
+      "some-op": [{ "type": "sometype", "impl": "someimpl" }]
+    }
+    runtimeManifest: {}
+`
+    })
+    expect(() => appConfig.load({})).toThrow('must have required property \'packages\'')
   })
 
   test('no implementation - allowNoImpl=false', async () => {
@@ -455,7 +500,7 @@ application:
 `
       }
     )
-    expect(() => appConfig.load({})).toThrow('Missing or invalid keys in app.config.yaml')
+    expect(() => appConfig.load({})).toThrow('must NOT have additional properties')
   })
 
   test('invalid schema: runtimeManifest has no packages', async () => {
@@ -472,7 +517,7 @@ application:
 `
       }
     )
-    expect(() => appConfig.load({})).toThrow('Missing or invalid keys in app.config.yaml')
+    expect(() => appConfig.load({})).toThrow('"missingProperty": "packages"')
   })
 
   test('invalid schema: configSchema has no items', async () => {
@@ -486,7 +531,7 @@ application:
 `
       }
     )
-    expect(() => appConfig.load({})).toThrow('Missing or invalid keys in app.config.yaml')
+    expect(() => appConfig.load({})).toThrow('"message": "must NOT have fewer than 1 items"')
   })
 
   test('invalid schema: configSchema has an item without envKey', async () => {
@@ -501,7 +546,7 @@ application:
 `
       }
     )
-    expect(() => appConfig.load({})).toThrow('Missing or invalid keys in app.config.yaml')
+    expect(() => appConfig.load({})).toThrow("\"must have required property 'envKey'\"")
   })
 
   test('invalid schema: configSchema has an item without type', async () => {
@@ -516,7 +561,7 @@ application:
 `
       }
     )
-    expect(() => appConfig.load({})).toThrow('Missing or invalid keys in app.config.yaml')
+    expect(() => appConfig.load({})).toThrow("\"must have required property 'type'\"")
   })
 
   test('invalid schema: configSchema with an additional property', async () => {
@@ -533,7 +578,7 @@ application:
 `
       }
     )
-    expect(() => appConfig.load({})).toThrow('Missing or invalid keys in app.config.yaml')
+    expect(() => appConfig.load({})).toThrow('must NOT have additional properties')
   })
 
   test('valid configSchema', async () => {

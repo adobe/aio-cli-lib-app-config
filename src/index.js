@@ -499,9 +499,10 @@ function buildExtConfigs (userConfig, commonConfig, includeIndex) {
       configs[extName] = buildSingleConfig(extName, singleUserConfig, commonConfig, includeIndex)
       // extensions have an extra operations field
       configs[extName].operations = singleUserConfig.operations
-      if (!configs[extName].operations) {
-        throw new Error(`Missing 'operations' config field for extension point ${extName}`)
-      }
+      // this is checked by the schema validation
+      // if (!configs[extName].operations) {
+      //   throw new Error(`Missing 'operations' config field for extension point ${extName}`)
+      // }
     })
   }
   return configs
