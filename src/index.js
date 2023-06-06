@@ -78,6 +78,7 @@ const cloneDeep = require('lodash.clonedeep')
  *
  * loading config returns following object (this config is internal, not user facing):
  *  {
+ *    configSchema: { app.config.yaml configSchema field }
  *    aio: {...aioConfig...},
  *    packagejson: {...package.json...},
  *    all: {
@@ -118,7 +119,8 @@ const cloneDeep = require('lodash.clonedeep')
  *          dist,
  *          remote,
  *          urls
- *        }
+ *        },
+ *        events: {}
  *      }
  *    },
  *    OPTIONAL:'dx/asset-compute/worker/1': {
@@ -168,6 +170,7 @@ function load (options = { allowNoImpl: false }) {
     throw new Error(`Couldn't find configuration in '${process.cwd()}', make sure to add at least one extension or a standalone app`)
   }
   return {
+    configSchema: appConfig?.configSchema,
     all,
     implements: impl, // e.g. 'dx/excshell/1', 'application'
     // includeIndex keeps a map from config keys to files that includes them and the relative key in the file.

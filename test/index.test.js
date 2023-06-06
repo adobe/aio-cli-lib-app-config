@@ -62,7 +62,7 @@ describe('load config', () => {
   test('exc with events config', async () => {
     global.loadFixtureApp('exc-with-events')
     config = appConfig.load({})
-    expect(config.all['dx/excshell/1']).toEqual(expect.objectContaining({ events: expect.any(Object) }))
+    expect(config.all['dx/excshell/1']).toEqual(expect.objectContaining({ events: { registrations: { 'Demo name': { description: 'Demo description', events_of_interest: [{ event_codes: ['com.adobe.platform.gdpr.joberror', 'com.adobe.platform.gdpr.producterror'], provider_metadata: 'gdpr_events' }, { event_codes: ['test-code-skrishna', 'card_abandonment'], provider_metadata: 'aem' }], runtime_action: 'my-exc-package/action' }, 'Event Registration Default': { description: 'Registration for IO Events', events_of_interest: [{ event_codes: ['com.adobe.platform.gdpr.joberror', 'com.adobe.platform.gdpr.producterror'], provider_metadata: 'gdpr_events' }], runtime_action: 'my-exc-package/action' } } } }))
   })
 
   test('standalone app, exc and nui extension config', async () => {
@@ -485,6 +485,31 @@ application:
     expect(config.all.application.web['response-headers']).toEqual({ '/*': { testHeader: 'foo' } })
   })
 
+  test('valid configSchema with two fields', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          runtimeManifest: { packages: {}}
+        configSchema:
+          - envKey: HELLO
+            type: string
+            secret: true
+            default: hello
+            title: yo
+            enum:
+              - hello
+              - hola
+              - bonjour
+          - envKey: BYE
+            type: boolean
+`
+      }
+    )
+    expect(appConfig.load({}).configSchema).toEqual([{ default: 'hello', enum: ['hello', 'hola', 'bonjour'], envKey: 'HELLO', secret: true, title: 'yo', type: 'string' }, { envKey: 'BYE', type: 'boolean' }])
+  })
+
   test('invalid schema: web.res-header instead of web.response-headers', async () => {
     global.fakeFileSystem.addJson(
       {
@@ -581,27 +606,20 @@ application:
     expect(() => appConfig.load({})).toThrow('must NOT have additional properties')
   })
 
-  test('valid configSchema', async () => {
+  test('invalid schema: configSchema with an invalid type', async () => {
     global.fakeFileSystem.addJson(
       {
         '/package.json': '{}',
         '/app.config.yaml': `
-        application:
-          runtimeManifest: { packages: {}}
         configSchema:
           - envKey: HELLO
-            type: string
-            secret: true
-            default: hello
-            title: yo
-            enum:
-              - hello
-              - hola
-              - bonjour
+            type: invalid
+        application:
+          runtimeManifest: { packages: {}}
 `
       }
     )
-    expect(() => appConfig.load({})).not.toThrow()
+    expect(() => appConfig.load({})).toThrow('must be equal to one of the allowed values')
   })
 })
 
