@@ -4,7 +4,8 @@
   "type": "object",
   "properties": {
     "application": { "$ref": "#/definitions/application" },
-    "extensions": { "$ref": "#/definitions/extensions" }
+    "extensions": { "$ref": "#/definitions/extensions" },
+    "configSchema": { "$ref": "#/definitions/configSchema"}
   },
   "anyOf": [
     {
@@ -43,8 +44,7 @@
         "csscacheduration": { "type": "number" },
         "imagecacheduration": { "type": "number" },
         "hooks": { "$ref": "#/definitions/hooks" },
-        "web": { "$ref": "#/definitions/web" },
-        "configSchema": { "$ref": "#/definitions/configSchema"}
+        "web": { "$ref": "#/definitions/web" }
       },
       "required": []
     },

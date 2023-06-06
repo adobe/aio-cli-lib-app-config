@@ -480,8 +480,9 @@ application:
       {
         '/package.json': '{}',
         '/app.config.yaml': `
+        configSchema: []
         application:
-          configSchema: []
+          runtimeManifest: { packages: {}}
 `
       }
     )
@@ -493,9 +494,10 @@ application:
       {
         '/package.json': '{}',
         '/app.config.yaml': `
+        configSchema:
+          - type: string
         application:
-          configSchema:
-            - type: string
+          runtimeManifest: { packages: {}}
 `
       }
     )
@@ -507,9 +509,10 @@ application:
       {
         '/package.json': '{}',
         '/app.config.yaml': `
+        configSchema:
+          - envKey: HELLO
         application:
-          configSchema:
-            - envKey: HELLO
+          runtimeManifest: { packages: {}}
 `
       }
     )
@@ -521,11 +524,12 @@ application:
       {
         '/package.json': '{}',
         '/app.config.yaml': `
+        configSchema:
+          - envKey: HELLO
+            type: string
+            somenotallowed: prop
         application:
-          configSchema:
-            - envKey: HELLO
-              type: string
-              somenotallowed: prop
+          runtimeManifest: { packages: {}}
 `
       }
     )
@@ -539,16 +543,16 @@ application:
         '/app.config.yaml': `
         application:
           runtimeManifest: { packages: {}}
-          configSchema:
-            - envKey: HELLO
-              type: string
-              secret: true
-              default: hello
-              title: yo
-              enum:
-                - hello
-                - hola
-                - bonjour
+        configSchema:
+          - envKey: HELLO
+            type: string
+            secret: true
+            default: hello
+            title: yo
+            enum:
+              - hello
+              - hola
+              - bonjour
 `
       }
     )
