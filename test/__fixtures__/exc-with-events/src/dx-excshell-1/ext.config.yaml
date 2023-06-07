@@ -6,6 +6,26 @@ actions: ./actions
 web: ./web-src
 events:
   registrations:
+    Event Registration Default:
+      description: Registration for IO Events
+      events_of_interest:
+        - provider_metadata: gdpr_events
+          event_codes:
+            - com.adobe.platform.gdpr.joberror
+            - com.adobe.platform.gdpr.producterror
+      runtime_action: my-exc-package/action
+    Demo name:
+      description: Demo description
+      events_of_interest:
+        - provider_metadata: gdpr_events
+          event_codes:
+            - com.adobe.platform.gdpr.joberror
+            - com.adobe.platform.gdpr.producterror
+        - provider_metadata: aem
+          event_codes:
+            - test-code-skrishna
+            - card_abandonment
+      runtime_action: my-exc-package/action
 runtimeManifest:
   packages:
     my-exc-package:
