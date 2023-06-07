@@ -273,6 +273,14 @@ extensions:
     await expect(appConfig.load({})).rejects.toThrow('must have required property \'packages\'')
   })
 
+  // options
+  test('standalone app config - ignoreAioConfig=true', async () => {
+    global.loadFixtureApp('app')
+    config = await appConfig.load({ ignoreAioConfig: true })
+    const mockConfig = getMockConfig('app', {})
+    expect(config).toEqual(mockConfig)
+  })
+
   test('no implementation - allowNoImpl=false', async () => {
     global.fakeFileSystem.addJson({ '/package.json': '{}' })
     await expect(appConfig.load({})).rejects.toThrow('Couldn\'t find configuration')

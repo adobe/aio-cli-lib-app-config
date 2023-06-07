@@ -136,13 +136,14 @@ const cloneDeep = require('lodash.clonedeep')
  *
  * @param {object} options options to load Config
  * @param {boolean} options.allowNoImpl do not throw if there is no implementation
+ * @param {boolean} options.ignoreAioConfig do not load .aio config via aio-lib-core-config, which is loaded synchronously
  * @returns {object} the config
  */
-async function load (options = { allowNoImpl: false }) {
+async function load (options = { allowNoImpl: false, ignoreAioConfig: false }) {
   // I. load common config
   // configuration that is shared for application and each extension config
   // holds things like ow credentials, packagejson and aioConfig
-  const commonConfig = await loadCommonConfig()
+  const commonConfig = await loadCommonConfig({ ignoreAioConfig: options.ignoreAioConfig })
   // checkCommonConfig(commonConfig)
 
   // II. load app.config.yaml & validate + load/merge legacy configuration if any
@@ -204,10 +205,13 @@ async function validateAppConfig (appConfigObj) {
 }
 
 /** @private */
-async function loadCommonConfig () {
-  // load aio config (mostly runtime and console config)
-  aioConfigLoader.reload()
-  const aioConfig = aioConfigLoader.get() || {}
+async function loadCommonConfig (/* istanbul ignore next */options = { ignoreAioConfig: false }) {
+  let aioConfig = {}
+  if (!options.ignoreAioConfig) {
+    // load aio config (mostly runtime and console config)
+    aioConfigLoader.reload()
+    aioConfig = aioConfigLoader.get() || {}
+  }
 
   const packagejson = await fs.readJson('package.json', { throws: true })
 
