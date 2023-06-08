@@ -644,7 +644,7 @@ describe('coalesce config', () => {
 
   test('complex include config, relative paths', async () => {
     global.loadFixtureApp('exc-complex-includes')
-    coalesced = await appConfig.coalesceAppConfig('app.config.yaml') // {} or not for coverage
+    coalesced = await appConfig.coalesce('app.config.yaml') // {} or not for coverage
     expect(coalesced.config).toEqual({ extensions: { 'dx/excshell/1': { actions: 'src/dx-excshell-1/actions', operations: { view: [{ impl: 'index.html', type: 'web' }] }, runtimeManifest: { packages: { 'my-exc-package': { actions: { action: { annotations: { final: true, 'require-adobe-auth': true }, function: 'src/dx-excshell-1/actions/action.js', include: [['src/dx-excshell-1/actions/somefile.txt', 'file.txt']], inputs: { LOG_LEVEL: 'debug' }, limits: { concurrency: 189 }, runtime: 'nodejs:14', web: 'yes' } }, license: 'Apache-2.0' } } }, web: 'src/dx-excshell-1/web-src' } } })
     // pick some
     expect(coalesced.includeIndex.extensions).toEqual({ file: 'app.config.yaml', key: 'extensions' })
@@ -656,7 +656,7 @@ describe('coalesce config', () => {
 
   test('complex include config, absolute paths', async () => {
     global.loadFixtureApp('exc-complex-includes')
-    coalesced = await appConfig.coalesceAppConfig('app.config.yaml', { absolutePaths: true }) // {} or not for coverage
+    coalesced = await appConfig.coalesce('app.config.yaml', { absolutePaths: true }) // {} or not for coverage
     expect(coalesced.config).toEqual({ extensions: { 'dx/excshell/1': { actions: winCompat('/src/dx-excshell-1/actions'), operations: { view: [{ impl: 'index.html', type: 'web' }] }, runtimeManifest: { packages: { 'my-exc-package': { actions: { action: { annotations: { final: true, 'require-adobe-auth': true }, function: winCompat('/src/dx-excshell-1/actions/action.js'), include: [[winCompat('/src/dx-excshell-1/actions/somefile.txt'), 'file.txt']], inputs: { LOG_LEVEL: 'debug' }, limits: { concurrency: 189 }, runtime: 'nodejs:14', web: 'yes' } }, license: 'Apache-2.0' } } }, web: winCompat('/src/dx-excshell-1/web-src') } } })
     // pick some
     expect(coalesced.includeIndex.extensions).toEqual({ file: 'app.config.yaml', key: 'extensions' })

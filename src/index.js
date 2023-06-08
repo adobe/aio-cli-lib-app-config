@@ -155,8 +155,8 @@ async function load (options = { allowNoImpl: false, ignoreAioConfig: false }) {
   if (await fs.exists(defaults.USER_CONFIG_FILE)) {
     // this will resolve $include directives and output the app config into a single object
     // paths config values in $included files will be rewritten
-    const appConfigWithIndex = await coalesceAppConfig(defaults.USER_CONFIG_FILE, { absolutePaths: true })
-    const { valid, errors } = await validateAppConfig(appConfigWithIndex.config)
+    const appConfigWithIndex = await coalesce(defaults.USER_CONFIG_FILE, { absolutePaths: true })
+    const { valid, errors } = await validate(appConfigWithIndex.config)
     if (!valid) {
       throw new Error(`Missing or invalid keys in ${defaults.USER_CONFIG_FILE}: ${JSON.stringify(errors, null, 2)}`)
     }
@@ -187,12 +187,13 @@ async function load (options = { allowNoImpl: false, ignoreAioConfig: false }) {
 }
 
 /**
- * Validates an appConfigObj.
+ * Validates the app configuration.
+ * To validate an app.config.yaml file, use `await validate(await coalesce('app.config.yaml'))`
  *
- * @param {object} appConfigObj To obtain appConfigObj run coalesceAppConfig ('app.config.yaml')
+ * @param {object} coalescedAppConfigObj the resolved app config object.
  * @returns {object} {valid, errors}
  */
-async function validateAppConfig (appConfigObj) {
+async function validate (coalescedAppConfigObj) {
   /* eslint-disable-next-line node/no-unpublished-require */
   const ajv = new Ajv({
     allErrors: true,
@@ -201,7 +202,7 @@ async function validateAppConfig (appConfigObj) {
   ajvAddFormats(ajv)
 
   const validate = ajv.compile(schema)
-  return { valid: validate(appConfigObj), errors: validate.errors }
+  return { valid: validate(coalescedAppConfigObj), errors: validate.errors }
 }
 
 /** @private */
@@ -228,7 +229,7 @@ async function loadCommonConfig (/* istanbul ignore next */options = { ignoreAio
   owConfig.defaultApihost = defaults.defaultOwApihost
   owConfig.apihost = owConfig.apihost || defaults.defaultOwApihost // set by user
   owConfig.apiversion = owConfig.apiversion || 'v1'
-  // default package name replacing __APP_PACKAGE__ placeholder
+  // default package name for replacing the legacy __APP_PACKAGE__ placeholder
   owConfig.package = `${packagejson.name}-${packagejson.version}`
 
   return {
@@ -249,14 +250,14 @@ async function loadCommonConfig (/* istanbul ignore next */options = { ignoreAio
 // }
 
 /**
- * Resolve all includes, update relative paths and return a full app configuration object
+ * Resolve all includes, update relative paths and return a coalesced app configuration object.
  *
  * @param {string} appConfigFile path to the app.config.yaml
  * @param {object} options options
- * @param {object} options.absolutePaths boolean, resolve path to be absolute, defaults to relative to root folder.
+ * @param {object} options.absolutePaths boolean, true for absolute paths, default for relative to appConfigFile directory.
  * @returns {object} single appConfig with resolved includes
  */
-async function coalesceAppConfig (appConfigFile, options = { absolutePaths: false }) {
+async function coalesce (appConfigFile, options = { absolutePaths: false }) {
   // this code is traversing app.config.yaml recursively to resolve all $includes directives
 
   const config = yaml.safeLoad(await fs.readFile(appConfigFile, 'utf8'))
@@ -677,6 +678,6 @@ function resolveToRoot (pathValue, includedFromConfigPath, options = {}) {
 
 module.exports = {
   load,
-  validateAppConfig,
-  coalesceAppConfig
+  validate,
+  coalesce
 }
