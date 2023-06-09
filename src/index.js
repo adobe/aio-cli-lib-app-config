@@ -156,10 +156,7 @@ async function load (options = { allowNoImpl: false, ignoreAioConfig: false }) {
     // this will resolve $include directives and output the app config into a single object
     // paths config values in $included files will be rewritten
     const appConfigWithIndex = await coalesce(defaults.USER_CONFIG_FILE, { absolutePaths: true })
-    const { valid, errors } = await validate(appConfigWithIndex.config)
-    if (!valid) {
-      throw new Error(`Missing or invalid keys in ${defaults.USER_CONFIG_FILE}: ${JSON.stringify(errors, null, 2)}`)
-    }
+    await validate(appConfigWithIndex.config, { throws: true })
     const mergedAppConfig = await mergeLegacyAppConfig(appConfigWithIndex, legacyAppConfigWithIndex)
 
     appConfig = mergedAppConfig.config
@@ -191,18 +188,25 @@ async function load (options = { allowNoImpl: false, ignoreAioConfig: false }) {
  * To validate an app.config.yaml file, use `await validate(await coalesce('app.config.yaml'))`
  *
  * @param {object} coalescedAppConfigObj the resolved app config object.
- * @returns {object} {valid, errors}
+ * @param {object} options options
+ * @param {boolean} options.throws defaults to false, if true throws on validation error instead of returning the error
+ * @throws if not valid
  */
-async function validate (coalescedAppConfigObj) {
+async function validate (coalescedAppConfigObj, options = { throws: false }) {
   /* eslint-disable-next-line node/no-unpublished-require */
   const ajv = new Ajv({
     allErrors: true,
     allowUnionTypes: true
   })
   ajvAddFormats(ajv)
-
   const validate = ajv.compile(schema)
-  return { valid: validate(coalescedAppConfigObj), errors: validate.errors }
+
+  const valid = validate(coalescedAppConfigObj)
+  const errors = validate.errors
+  if (!valid && options.throws) {
+    throw new Error(`Missing or invalid keys in ${defaults.USER_CONFIG_FILE}: ${JSON.stringify(errors, null, 2)}`)
+  }
+  return { valid, errors }
 }
 
 /** @private */

@@ -631,6 +631,22 @@ application:
   })
 })
 
+describe('validate config', () => {
+  // most validation tests are run as part of load this is just to test the validate config interface
+  test('config pass', async () => {
+    await expect(appConfig.validate({ application: {} })).resolves.toEqual({ errors: null, valid: true })
+  })
+  test('config pass, throws= true', async () => {
+    await expect(appConfig.validate({ application: {} }, { throws: true })).resolves.toEqual({ errors: null, valid: true })
+  })
+  test('config not pass', async () => {
+    await expect(appConfig.validate({ applications: {} })).resolves.toEqual({ errors: expect.any(Array), valid: false })
+  })
+  test('config not pass, throws=true', async () => {
+    await expect(appConfig.validate({ applications: {} }, { throws: true })).rejects.toThrow('Missing')
+  })
+})
+
 describe('coalesce config', () => {
   let coalesced
   beforeEach(async () => {
