@@ -139,11 +139,14 @@ const cloneDeep = require('lodash.clonedeep')
  * @param {boolean} options.ignoreAioConfig do not load .aio config via aio-lib-core-config, which is loaded synchronously and blocks the main thread
  * @returns {object} the config
  */
-async function load (options = { allowNoImpl: false, ignoreAioConfig: false }) {
+async function load (options = {}) {
+  const allowNoImpl = options.allowNoImpl === undefined ? false : options.allowNoImpl
+  const ignoreAioConfig = options.ignoreAioConfig === undefined ? false : options.ignoreAioConfig
+
   // I. load common config
   // configuration that is shared for application and each extension config
   // holds things like ow credentials, packagejson and aioConfig
-  const commonConfig = await loadCommonConfig({ ignoreAioConfig: options.ignoreAioConfig })
+  const commonConfig = await loadCommonConfig({ ignoreAioConfig })
   // checkCommonConfig(commonConfig)
 
   // II. load app.config.yaml & validate + load/merge legacy configuration if any
@@ -167,7 +170,7 @@ async function load (options = { allowNoImpl: false, ignoreAioConfig: false }) {
   // full standalone application and extension configurations
   const all = await buildAllConfigs(appConfig, commonConfig, includeIndex)
   const impl = Object.keys(all).sort() // sort for predictable configuration
-  if (!options.allowNoImpl && impl.length <= 0) {
+  if (!allowNoImpl && impl.length <= 0) {
     throw new Error(`Couldn't find configuration in '${process.cwd()}', make sure to add at least one extension or a standalone app`)
   }
   return {
@@ -192,7 +195,8 @@ async function load (options = { allowNoImpl: false, ignoreAioConfig: false }) {
  * @param {boolean} options.throws defaults to false, if true throws on validation error instead of returning the error
  * @throws if not valid
  */
-async function validate (coalescedAppConfigObj, options = { throws: false }) {
+async function validate (coalescedAppConfigObj, options = {}) {
+  const throws = options.throws === undefined ? false : options.throws
   /* eslint-disable-next-line node/no-unpublished-require */
   const ajv = new Ajv({
     allErrors: true,
@@ -203,14 +207,14 @@ async function validate (coalescedAppConfigObj, options = { throws: false }) {
 
   const valid = validate(coalescedAppConfigObj)
   const errors = validate.errors
-  if (!valid && options.throws) {
+  if (!valid && throws) {
     throw new Error(`Missing or invalid keys in ${defaults.USER_CONFIG_FILE}: ${JSON.stringify(errors, null, 2)}`)
   }
   return { valid, errors }
 }
 
 /** @private */
-async function loadCommonConfig (/* istanbul ignore next */options = { ignoreAioConfig: false }) {
+async function loadCommonConfig (/* istanbul ignore next */options = {}) {
   let aioConfig = {}
   if (!options.ignoreAioConfig) {
     // load aio config (mostly runtime and console config)
@@ -264,6 +268,7 @@ async function loadCommonConfig (/* istanbul ignore next */options = { ignoreAio
 async function coalesce (appConfigFile, options = { absolutePaths: false }) {
   // this code is traversing app.config.yaml recursively to resolve all $includes directives
 
+  const absolutePaths = options.absolutePaths === undefined ? false : options.absolutePaths
   const config = yaml.safeLoad(await fs.readFile(appConfigFile, 'utf8'))
   // keep an index that will map keys like 'extensions.abc.runtimeManifest' to the config file where there are defined
   const includeIndex = {}
@@ -347,7 +352,7 @@ async function coalesce (appConfigFile, options = { absolutePaths: false }) {
   }
 
   const appConfigWithIncludeIndex = { config, includeIndex }
-  rewritePathsInPlace(appConfigWithIncludeIndex, { absolutePaths: options.absolutePaths })
+  rewritePathsInPlace(appConfigWithIncludeIndex, { absolutePaths })
 
   return appConfigWithIncludeIndex
 }
