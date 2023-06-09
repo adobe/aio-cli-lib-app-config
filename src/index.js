@@ -136,12 +136,15 @@ const cloneDeep = require('lodash.clonedeep')
  *
  * @param {object} options options to load Config
  * @param {boolean} options.allowNoImpl do not throw if there is no implementation
- * @param {boolean} options.ignoreAioConfig do not load .aio config via aio-lib-core-config, which is loaded synchronously and blocks the main thread
+ * @param {boolean} options.ignoreAioConfig do not load .aio config via aio-lib-core-config, which is loaded synchronously and blocks the main thread.
  * @returns {object} the config
  */
 async function load (options = {}) {
   const allowNoImpl = options.allowNoImpl === undefined ? false : options.allowNoImpl
   const ignoreAioConfig = options.ignoreAioConfig === undefined ? false : options.ignoreAioConfig
+  // *NOTE* it would be nice to support an appFolder option to load config from a different folder.
+  // However, this requires to update aio-lib-core-config to support loading
+  // from a different folder aswell (or enforcing ignore).
 
   // I. load common config
   // configuration that is shared for application and each extension config
