@@ -268,7 +268,7 @@ async function loadCommonConfig (/* istanbul ignore next */options = {}) {
  * @param {object} options.absolutePaths boolean, true for absolute paths, default for relative to appConfigFile directory.
  * @returns {object} single appConfig with resolved includes
  */
-async function coalesce (appConfigFile, options = { absolutePaths: false }) {
+async function coalesce (appConfigFile, options = {}) {
   // this code is traversing app.config.yaml recursively to resolve all $includes directives
 
   const absolutePaths = options.absolutePaths === undefined ? false : options.absolutePaths
