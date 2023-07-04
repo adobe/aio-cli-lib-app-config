@@ -39,7 +39,7 @@ describe('load config', () => {
   // main cases
   test('standalone app config', async () => {
     global.loadFixtureApp('app')
-    config = appConfig.load() // {} or not for coverage
+    config = await appConfig.load() // {} or not for coverage
     const mockConfig = getMockConfig('app', global.fakeConfig.tvm, {
       'all.application.project': expect.any(Object)
     })
@@ -48,12 +48,12 @@ describe('load config', () => {
 
   test('not in an app', async () => {
     global.loadFixtureApp('not-in-app')
-    expect(() => appConfig.load()).toThrow(new Error('package.json: ENOENT: no such file or directory, open \'package.json\''))
+    await expect(appConfig.load()).rejects.toThrow(new Error('ENOENT: no such file or directory, open \'package.json\''))
   })
 
   test('exc extension config', async () => {
     global.loadFixtureApp('exc')
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1': expect.any(Object)
     }))
@@ -61,13 +61,13 @@ describe('load config', () => {
 
   test('exc with events config', async () => {
     global.loadFixtureApp('exc-with-events')
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config.all['dx/excshell/1']).toEqual(expect.objectContaining({ events: { registrations: { 'Demo name': { description: 'Demo description', events_of_interest: [{ event_codes: ['com.adobe.platform.gdpr.joberror', 'com.adobe.platform.gdpr.producterror'], provider_metadata: 'gdpr_events' }, { event_codes: ['test-code-skrishna', 'card_abandonment'], provider_metadata: 'aem' }], runtime_action: 'my-exc-package/action' }, 'Event Registration Default': { description: 'Registration for IO Events', events_of_interest: [{ event_codes: ['com.adobe.platform.gdpr.joberror', 'com.adobe.platform.gdpr.producterror'], provider_metadata: 'gdpr_events' }], runtime_action: 'my-exc-package/action' } } } }))
   })
 
   test('standalone app, exc and nui extension config', async () => {
     global.loadFixtureApp('app-exc-nui')
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('app-exc-nui', global.fakeConfig.tvm, {
       'all.application.project': expect.any(Object),
       'all.dx/excshell/1.project': expect.any(Object),
@@ -77,7 +77,7 @@ describe('load config', () => {
 
   test('standalone app with no actions', async () => {
     global.loadFixtureApp('app-no-actions')
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('app-no-actions', global.fakeConfig.tvm, {
       'all.application.project': expect.any(Object),
       'all.application.events': expect.undefined
@@ -86,7 +86,7 @@ describe('load config', () => {
 
   test('exc with complex include pattern', async () => {
     global.loadFixtureApp('exc-complex-includes')
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('exc-complex-includes', global.fakeConfig.tvm, {
       'all.dx/excshell/1.project': expect.any(Object)
     }))
@@ -97,7 +97,7 @@ describe('load config', () => {
     const fullAioConfig = { app: global.aioLegacyAppConfig, ...global.fakeConfig.tvm }
     // mock app config
     mockAIOConfig.get.mockImplementation(k => fullAioConfig)
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('legacy-app', fullAioConfig, {
       'all.application.project': expect.any(Object)
     }))
@@ -107,7 +107,7 @@ describe('load config', () => {
   test('exc with default package.json name & version', async () => {
     global.loadFixtureApp('exc')
     global.fakeFileSystem.addJson({ '/package.json': '{}' })
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       // will set defaults
       'all.dx/excshell/1.app.name': 'unnamed-app',
@@ -126,7 +126,7 @@ describe('load config', () => {
     userConfig.dist = 'new/dist/for/excshell'
     global.fakeFileSystem.addJson({ '/src/dx-excshell-1/ext.config.yaml': yaml.dump(userConfig) })
 
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.app.dist': path.resolve('/src/dx-excshell-1/new/dist/for/excshell'),
       'all.dx/excshell/1.actions.dist': path.resolve('/src/dx-excshell-1/new/dist/for/excshell/actions'),
@@ -146,7 +146,7 @@ describe('load config', () => {
     userConfig.s3bucket = 'fakebucket'
     global.fakeFileSystem.addJson({ '/src/dx-excshell-1/ext.config.yaml': yaml.dump(userConfig) })
 
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.s3.creds': {
         accessKeyId: 'fakeid',
@@ -165,7 +165,7 @@ describe('load config', () => {
     userConfig.tvmurl = 'customurl'
     global.fakeFileSystem.addJson({ '/src/dx-excshell-1/ext.config.yaml': yaml.dump(userConfig) })
 
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.s3.tvmUrl': 'customurl',
       'all.dx/excshell/1.project': expect.any(Object),
@@ -180,7 +180,7 @@ describe('load config', () => {
     userConfig.tvmurl = 'https://firefly-tvm.adobe.io'
     global.fakeFileSystem.addJson({ '/src/dx-excshell-1/ext.config.yaml': yaml.dump(userConfig) })
 
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.project': expect.any(Object),
       includeIndex: expect.any(Object)
@@ -194,7 +194,7 @@ describe('load config', () => {
     userConfig.runtimeManifest.packages['my-exc-package'].actions.newAction = { web: 'yes' }
     global.fakeFileSystem.addJson({ '/src/dx-excshell-1/ext.config.yaml': yaml.dump(userConfig) })
 
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.manifest.full.packages.my-exc-package.actions.newAction': { web: 'yes' },
       'all.dx/excshell/1.project': expect.any(Object),
@@ -206,7 +206,7 @@ describe('load config', () => {
     libEnv.getCliEnv.mockReturnValue('stage')
     global.loadFixtureApp('exc')
 
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       'all.dx/excshell/1.app.defaultHostname': 'dev.runtime.adobe.io',
       'all.dx/excshell/1.app.hostname': 'dev.runtime.adobe.io',
@@ -225,7 +225,7 @@ extensions:
     no: 'operations'
 `
     })
-    expect(() => appConfig.load({})).toThrow("must have required property 'operations'")
+    await expect(appConfig.load({})).rejects.toThrow("must have required property 'operations'")
   })
 
   test('throw extension with 0 operations', async () => {
@@ -238,7 +238,7 @@ extensions:
     operations: {}
 `
     })
-    expect(() => appConfig.load({})).toThrow('must NOT have fewer than 1 properties')
+    await expect(appConfig.load({})).rejects.toThrow('must NOT have fewer than 1 properties')
   })
 
   test('throw extension with 1 operations that has 0 items', async () => {
@@ -253,7 +253,7 @@ extensions:
     }
 `
     })
-    expect(() => appConfig.load({})).toThrow('must NOT have fewer than 1 items')
+    await expect(appConfig.load({})).rejects.toThrow('must NOT have fewer than 1 items')
   })
 
   test('extension missing runtimeManifest packages', async () => {
@@ -270,17 +270,25 @@ extensions:
     runtimeManifest: {}
 `
     })
-    expect(() => appConfig.load({})).toThrow('must have required property \'packages\'')
+    await expect(appConfig.load({})).rejects.toThrow('must have required property \'packages\'')
+  })
+
+  // options
+  test('standalone app config - ignoreAioConfig=true', async () => {
+    global.loadFixtureApp('app')
+    config = await appConfig.load({ ignoreAioConfig: true })
+    const mockConfig = getMockConfig('app', {})
+    expect(config).toEqual(mockConfig)
   })
 
   test('no implementation - allowNoImpl=false', async () => {
     global.fakeFileSystem.addJson({ '/package.json': '{}' })
-    expect(() => appConfig.load({})).toThrow('Couldn\'t find configuration')
+    await expect(appConfig.load({})).rejects.toThrow('Couldn\'t find configuration')
   })
 
   test('no implementation - allowNoImpl=true', async () => {
     global.fakeFileSystem.addJson({ '/package.json': '{}' })
-    config = appConfig.load({ allowNoImpl: true })
+    config = await appConfig.load({ allowNoImpl: true })
     expect(config).toEqual(getMockConfig('exc', global.fakeConfig.tvm, {
       all: {},
       implements: [],
@@ -293,7 +301,7 @@ extensions:
   test('exc - no aio config', async () => {
     global.loadFixtureApp('exc')
     mockAIOConfig.get.mockImplementation(k => {})
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('exc', {}))
   })
 
@@ -311,7 +319,7 @@ extensions:
 '$include: ../b.yaml'
       }
     )
-    expect(() => appConfig.load({})).toThrow('Detected \'$include\' cycle: \'app.config.yaml,b.yaml,dir/c.yaml,b.yaml\'')
+    await expect(appConfig.load({})).rejects.toThrow('Detected \'$include\' cycle: \'app.config.yaml,b.yaml,dir/c.yaml,b.yaml\'')
   })
 
   test('include does not exist', async () => {
@@ -321,7 +329,7 @@ extensions:
         '/app.config.yaml': '$include: b.yaml'
       }
     )
-    expect(() => appConfig.load({})).toThrow('\'$include: b.yaml\' cannot be resolved')
+    await expect(appConfig.load({})).rejects.toThrow('\'$include: b.yaml\' cannot be resolved')
   })
 
   test('include does not resolve to object - string', async () => {
@@ -332,10 +340,10 @@ extensions:
         '/b.yaml': 'string'
       }
     )
-    expect(() => appConfig.load({})).toThrow('\'$include: b.yaml\' does not resolve to an object')
+    await expect(appConfig.load({})).rejects.toThrow('\'$include: b.yaml\' does not resolve to an object')
   })
 
-  test('include does not resolve to object - arraay', async () => {
+  test('include does not resolve to object - array', async () => {
     global.fakeFileSystem.addJson(
       {
         '/package.json': '{}',
@@ -343,7 +351,7 @@ extensions:
         '/b.yaml': '[1,2,3]'
       }
     )
-    expect(() => appConfig.load({})).toThrow('\'$include: b.yaml\' does not resolve to an object')
+    await expect(appConfig.load({})).rejects.toThrow('\'$include: b.yaml\' does not resolve to an object')
   })
 
   test('legacy-app - no hooks', async () => {
@@ -355,7 +363,7 @@ extensions:
     const fullAioConfig = { app: global.aioLegacyAppConfig, ...global.fakeConfig.tvm }
     // mock app config
     mockAIOConfig.get.mockImplementation(k => fullAioConfig)
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('legacy-app', fullAioConfig, {
       'all.application.hooks': {},
       // 'all.application.events': expect.any(Object),
@@ -379,7 +387,7 @@ extensions:
     const fullAioConfig = { app: global.aioLegacyAppConfig, ...global.fakeConfig.tvm }
     // mock app config
     mockAIOConfig.get.mockImplementation(k => fullAioConfig)
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config).toEqual(getMockConfig('legacy-app', fullAioConfig, {
       'all.application.manifest.full': {
         packages: { thepackage: {} }
@@ -408,7 +416,7 @@ application:
 `
       }
     )
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config.all.application.manifest.full).toEqual({ packages: {} })
   })
 
@@ -428,7 +436,7 @@ application:
 `
       }
     )
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config.all.application.web['response-headers']).toEqual({ '/*': { testHeader: 'foo' } })
   })
 
@@ -462,7 +470,7 @@ application:
       '/*.js': { testHeader: 'jsFoo' },
       '/test/folder/*': { testHeader: 'folderFoo' }
     }
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config.all.application.web['response-headers']).toEqual(expectedRes)
   })
 
@@ -481,7 +489,7 @@ application:
 `
       }
     )
-    config = appConfig.load({})
+    config = await appConfig.load({})
     expect(config.all.application.web['response-headers']).toEqual({ '/*': { testHeader: 'foo' } })
   })
 
@@ -507,7 +515,7 @@ application:
 `
       }
     )
-    expect(appConfig.load({}).configSchema).toEqual([{ default: 'hello', enum: ['hello', 'hola', 'bonjour'], envKey: 'HELLO', secret: true, title: 'yo', type: 'string' }, { envKey: 'BYE', type: 'boolean' }])
+    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({ configSchema: [{ default: 'hello', enum: ['hello', 'hola', 'bonjour'], envKey: 'HELLO', secret: true, title: 'yo', type: 'string' }, { envKey: 'BYE', type: 'boolean' }] }))
   })
 
   test('invalid schema: web.res-header instead of web.response-headers', async () => {
@@ -525,7 +533,7 @@ application:
 `
       }
     )
-    expect(() => appConfig.load({})).toThrow('must NOT have additional properties')
+    await expect(appConfig.load({})).rejects.toThrow('must NOT have additional properties')
   })
 
   test('invalid schema: runtimeManifest has no packages', async () => {
@@ -542,7 +550,7 @@ application:
 `
       }
     )
-    expect(() => appConfig.load({})).toThrow('"missingProperty": "packages"')
+    await expect(appConfig.load({})).rejects.toThrow('"missingProperty": "packages"')
   })
 
   test('invalid schema: configSchema has no items', async () => {
@@ -556,7 +564,7 @@ application:
 `
       }
     )
-    expect(() => appConfig.load({})).toThrow('"message": "must NOT have fewer than 1 items"')
+    await expect(appConfig.load({})).rejects.toThrow('"message": "must NOT have fewer than 1 items"')
   })
 
   test('invalid schema: configSchema has an item without envKey', async () => {
@@ -571,7 +579,7 @@ application:
 `
       }
     )
-    expect(() => appConfig.load({})).toThrow("\"must have required property 'envKey'\"")
+    await expect(appConfig.load({})).rejects.toThrow("\"must have required property 'envKey'\"")
   })
 
   test('invalid schema: configSchema has an item without type', async () => {
@@ -586,7 +594,7 @@ application:
 `
       }
     )
-    expect(() => appConfig.load({})).toThrow("\"must have required property 'type'\"")
+    await expect(appConfig.load({})).rejects.toThrow("\"must have required property 'type'\"")
   })
 
   test('invalid schema: configSchema with an additional property', async () => {
@@ -603,7 +611,7 @@ application:
 `
       }
     )
-    expect(() => appConfig.load({})).toThrow('must NOT have additional properties')
+    await expect(appConfig.load({})).rejects.toThrow('must NOT have additional properties')
   })
 
   test('invalid schema: configSchema with an invalid type', async () => {
@@ -619,7 +627,23 @@ application:
 `
       }
     )
-    expect(() => appConfig.load({})).toThrow('must be equal to one of the allowed values')
+    await expect(appConfig.load({})).rejects.toThrow('must be equal to one of the allowed values')
+  })
+})
+
+describe('validate config', () => {
+  // most validation tests are run as part of load this is just to test the validate config interface
+  test('config pass', async () => {
+    await expect(appConfig.validate({ application: {} })).resolves.toEqual({ errors: null, valid: true })
+  })
+  test('config pass, throws= true', async () => {
+    await expect(appConfig.validate({ application: {} }, { throws: true })).resolves.toEqual({ errors: null, valid: true })
+  })
+  test('config not pass', async () => {
+    await expect(appConfig.validate({ applications: {} })).resolves.toEqual({ errors: expect.any(Array), valid: false })
+  })
+  test('config not pass, throws=true', async () => {
+    await expect(appConfig.validate({ applications: {} }, { throws: true })).rejects.toThrow('Missing')
   })
 })
 
@@ -636,7 +660,7 @@ describe('coalesce config', () => {
 
   test('complex include config, relative paths', async () => {
     global.loadFixtureApp('exc-complex-includes')
-    coalesced = appConfig.coalesceAppConfig('app.config.yaml') // {} or not for coverage
+    coalesced = await appConfig.coalesce('app.config.yaml') // {} or not for coverage
     expect(coalesced.config).toEqual({ extensions: { 'dx/excshell/1': { actions: 'src/dx-excshell-1/actions', operations: { view: [{ impl: 'index.html', type: 'web' }] }, runtimeManifest: { packages: { 'my-exc-package': { actions: { action: { annotations: { final: true, 'require-adobe-auth': true }, function: 'src/dx-excshell-1/actions/action.js', include: [['src/dx-excshell-1/actions/somefile.txt', 'file.txt']], inputs: { LOG_LEVEL: 'debug' }, limits: { concurrency: 189 }, runtime: 'nodejs:14', web: 'yes' } }, license: 'Apache-2.0' } } }, web: 'src/dx-excshell-1/web-src' } } })
     // pick some
     expect(coalesced.includeIndex.extensions).toEqual({ file: 'app.config.yaml', key: 'extensions' })
@@ -648,7 +672,7 @@ describe('coalesce config', () => {
 
   test('complex include config, absolute paths', async () => {
     global.loadFixtureApp('exc-complex-includes')
-    coalesced = appConfig.coalesceAppConfig('app.config.yaml', { absolutePaths: true }) // {} or not for coverage
+    coalesced = await appConfig.coalesce('app.config.yaml', { absolutePaths: true }) // {} or not for coverage
     expect(coalesced.config).toEqual({ extensions: { 'dx/excshell/1': { actions: winCompat('/src/dx-excshell-1/actions'), operations: { view: [{ impl: 'index.html', type: 'web' }] }, runtimeManifest: { packages: { 'my-exc-package': { actions: { action: { annotations: { final: true, 'require-adobe-auth': true }, function: winCompat('/src/dx-excshell-1/actions/action.js'), include: [[winCompat('/src/dx-excshell-1/actions/somefile.txt'), 'file.txt']], inputs: { LOG_LEVEL: 'debug' }, limits: { concurrency: 189 }, runtime: 'nodejs:14', web: 'yes' } }, license: 'Apache-2.0' } } }, web: winCompat('/src/dx-excshell-1/web-src') } } })
     // pick some
     expect(coalesced.includeIndex.extensions).toEqual({ file: 'app.config.yaml', key: 'extensions' })

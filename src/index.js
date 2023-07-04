@@ -18,6 +18,9 @@ const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-cli-lib-app
 const Ajv = require('ajv')
 const ajvAddFormats = require('ajv-formats')
 
+// eslint-disable-next-line node/no-unpublished-require
+const schema = require('../schema/app.config.yaml.schema.json')
+
 // give or take daylight savings, and leap seconds ...
 const AboutAWeekInSeconds = '604800'
 const defaults = {
@@ -133,30 +136,34 @@ const cloneDeep = require('lodash.clonedeep')
  *
  * @param {object} options options to load Config
  * @param {boolean} options.allowNoImpl do not throw if there is no implementation
+ * @param {boolean} options.ignoreAioConfig do not load .aio config via aio-lib-core-config, which is loaded synchronously and blocks the main thread.
  * @returns {object} the config
  */
-function load (options = { allowNoImpl: false }) {
+async function load (options = {}) {
+  const allowNoImpl = options.allowNoImpl === undefined ? false : options.allowNoImpl
+  const ignoreAioConfig = options.ignoreAioConfig === undefined ? false : options.ignoreAioConfig
+  // *NOTE* it would be nice to support an appFolder option to load config from a different folder.
+  // However, this requires to update aio-lib-core-config to support loading
+  // from a different folder aswell (or enforcing ignore).
+
   // I. load common config
   // configuration that is shared for application and each extension config
   // holds things like ow credentials, packagejson and aioConfig
-  const commonConfig = loadCommonConfig()
-  checkCommonConfig(commonConfig)
+  const commonConfig = await loadCommonConfig({ ignoreAioConfig })
+  // checkCommonConfig(commonConfig)
 
   // II. load app.config.yaml & validate + load/merge legacy configuration if any
   // support backward compatibility, include legacy application configuration
-  const legacyAppConfigWithIndex = legacyToAppConfig(commonConfig)
+  const legacyAppConfigWithIndex = await legacyToAppConfig(commonConfig)
   let { config: appConfig, includeIndex } = legacyAppConfigWithIndex
   // no validation on the legacy configuration, which will be deprecated eventually
 
-  if (fs.existsSync(defaults.USER_CONFIG_FILE)) {
+  if (await fs.exists(defaults.USER_CONFIG_FILE)) {
     // this will resolve $include directives and output the app config into a single object
     // paths config values in $included files will be rewritten
-    const appConfigWithIndex = coalesceAppConfig(defaults.USER_CONFIG_FILE, { absolutePaths: true })
-    const { valid, errors } = validateAppConfig(appConfigWithIndex.config)
-    if (!valid) {
-      throw new Error(`Missing or invalid keys in ${defaults.USER_CONFIG_FILE}: ${JSON.stringify(errors, null, 2)}`)
-    }
-    const mergedAppConfig = mergeLegacyAppConfig(appConfigWithIndex, legacyAppConfigWithIndex)
+    const appConfigWithIndex = await coalesce(defaults.USER_CONFIG_FILE, { absolutePaths: true })
+    await validate(appConfigWithIndex.config, { throws: true })
+    const mergedAppConfig = await mergeLegacyAppConfig(appConfigWithIndex, legacyAppConfigWithIndex)
 
     appConfig = mergedAppConfig.config
     includeIndex = mergedAppConfig.includeIndex
@@ -164,9 +171,9 @@ function load (options = { allowNoImpl: false }) {
 
   // III. build output object
   // full standalone application and extension configurations
-  const all = buildAllConfigs(appConfig, commonConfig, includeIndex)
+  const all = await buildAllConfigs(appConfig, commonConfig, includeIndex)
   const impl = Object.keys(all).sort() // sort for predictable configuration
-  if (!options.allowNoImpl && impl.length <= 0) {
+  if (!allowNoImpl && impl.length <= 0) {
     throw new Error(`Couldn't find configuration in '${process.cwd()}', make sure to add at least one extension or a standalone app`)
   }
   return {
@@ -183,31 +190,42 @@ function load (options = { allowNoImpl: false }) {
 }
 
 /**
- * Validates an appConfigObj.
+ * Validates the app configuration.
+ * To validate an app.config.yaml file, use `await validate(await coalesce('app.config.yaml'))`
  *
- * @param {object} appConfigObj To obtain appConfigObj run coalesceAppConfig ('app.config.yaml')
- * @returns {object} {valid, errors}
+ * @param {object} coalescedAppConfigObj the resolved app config object.
+ * @param {object} options options
+ * @param {boolean} options.throws defaults to false, if true throws on validation error instead of returning the error
+ * @throws if not valid
  */
-function validateAppConfig (appConfigObj) {
+async function validate (coalescedAppConfigObj, options = {}) {
+  const throws = options.throws === undefined ? false : options.throws
   /* eslint-disable-next-line node/no-unpublished-require */
-  const schema = require('../schema/app.config.yaml.schema.json')
   const ajv = new Ajv({
     allErrors: true,
     allowUnionTypes: true
   })
   ajvAddFormats(ajv)
-
   const validate = ajv.compile(schema)
-  return { valid: validate(appConfigObj), errors: validate.errors }
+
+  const valid = validate(coalescedAppConfigObj)
+  const errors = validate.errors
+  if (!valid && throws) {
+    throw new Error(`Missing or invalid keys in ${defaults.USER_CONFIG_FILE}: ${JSON.stringify(errors, null, 2)}`)
+  }
+  return { valid, errors }
 }
 
 /** @private */
-function loadCommonConfig () {
-  // load aio config (mostly runtime and console config)
-  aioConfigLoader.reload()
-  const aioConfig = aioConfigLoader.get() || {}
+async function loadCommonConfig (/* istanbul ignore next */options = {}) {
+  let aioConfig = {}
+  if (!options.ignoreAioConfig) {
+    // load aio config (mostly runtime and console config)
+    aioConfigLoader.reload()
+    aioConfig = aioConfigLoader.get() || {}
+  }
 
-  const packagejson = fs.readJsonSync('package.json', { throws: true })
+  const packagejson = await fs.readJson('package.json', { throws: true })
 
   // defaults
   // remove scoped name to use this for open whisk entities
@@ -222,7 +240,7 @@ function loadCommonConfig () {
   owConfig.defaultApihost = defaults.defaultOwApihost
   owConfig.apihost = owConfig.apihost || defaults.defaultOwApihost // set by user
   owConfig.apiversion = owConfig.apiversion || 'v1'
-  // default package name replacing __APP_PACKAGE__ placeholder
+  // default package name for replacing the legacy __APP_PACKAGE__ placeholder
   owConfig.package = `${packagejson.name}-${packagejson.version}`
 
   return {
@@ -235,25 +253,26 @@ function loadCommonConfig () {
 }
 
 /** @private */
-function checkCommonConfig (commonConfig) {
-  // todo this depends on the commands, expose a throwOnMissingConsoleInfo ?
-  // if (!commonConfig.aio.project || !commonConfig.ow.auth) {
-  //   throw new Error('Missing project configuration, import a valid Console configuration first via \'aio app use\'')
-  // }
-}
+// function checkCommonConfig (commonConfig) {
+//   // todo this depends on the commands, expose a throwOnMissingConsoleInfo ?
+//   // if (!commonConfig.aio.project || !commonConfig.ow.auth) {
+//   //   throw new Error('Missing project configuration, import a valid Console configuration first via \'aio app use\'')
+//   // }
+// }
 
 /**
- * Resolve all includes, update relative paths and return a full app configuration object
+ * Resolve all includes, update relative paths and return a coalesced app configuration object.
  *
  * @param {string} appConfigFile path to the app.config.yaml
  * @param {object} options options
- * @param {object} options.absolutePaths boolean, resolve path to be absolute, defaults to relative to root folder.
+ * @param {object} options.absolutePaths boolean, true for absolute paths, default for relative to appConfigFile directory.
  * @returns {object} single appConfig with resolved includes
  */
-function coalesceAppConfig (appConfigFile, options = { absolutePaths: false }) {
+async function coalesce (appConfigFile, options = {}) {
   // this code is traversing app.config.yaml recursively to resolve all $includes directives
 
-  const config = yaml.safeLoad(fs.readFileSync(appConfigFile, 'utf8'))
+  const absolutePaths = options.absolutePaths === undefined ? false : options.absolutePaths
+  const config = yaml.safeLoad(await fs.readFile(appConfigFile, 'utf8'))
   // keep an index that will map keys like 'extensions.abc.runtimeManifest' to the config file where there are defined
   const includeIndex = {}
   // keep a cache for common included files - avoid to read a same file twice
@@ -310,14 +329,14 @@ function coalesceAppConfig (appConfigFile, options = { absolutePaths: false }) {
         throw new Error(`Detected '${defaults.INCLUDE_DIRECTIVE}' cycle: '${[...includedFiles, configFile].toString()}', please make sure that your configuration has no cycles.`)
       }
       // 2. check if file exists
-      if (!configCache[configFile] && !fs.existsSync(configFile)) {
+      if (!configCache[configFile] && !(await fs.exists(configFile))) {
         throw new Error(`'${defaults.INCLUDE_DIRECTIVE}: ${configFile}' cannot be resolved, please make sure the file exists.`)
       }
       // 3. delete the $include directive to be replaced
       delete parentObj[key]
       // 4. load the included file
       // Note the included file can in turn also have includes, so we will have to traverse it as well
-      const loadedConfig = configCache[configFile] || yaml.safeLoad(fs.readFileSync(configFile, 'utf8'))
+      const loadedConfig = configCache[configFile] || yaml.safeLoad(await fs.readFile(configFile, 'utf8'))
       if (Array.isArray(loadedConfig) || typeof loadedConfig !== 'object') {
         throw new Error(`'${defaults.INCLUDE_DIRECTIVE}: ${configFile}' does not resolve to an object. Including an array or primitive type config is not supported.`)
       }
@@ -336,13 +355,13 @@ function coalesceAppConfig (appConfigFile, options = { absolutePaths: false }) {
   }
 
   const appConfigWithIncludeIndex = { config, includeIndex }
-  rewritePathsInPlace(appConfigWithIncludeIndex, { absolutePaths: options.absolutePaths })
+  rewritePathsInPlace(appConfigWithIncludeIndex, { absolutePaths })
 
   return appConfigWithIncludeIndex
 }
 
 /** @private */
-function legacyToAppConfig (commonConfig) {
+async function legacyToAppConfig (commonConfig) {
   // load legacy user app config from manifest.yml, package.json, .aio.app
   const includeIndex = {}
   const legacyAppConfig = {}
@@ -362,8 +381,8 @@ function legacyToAppConfig (commonConfig) {
   }
 
   // 2. load legacy manifest.yaml
-  if (fs.existsSync(defaults.LEGACY_RUNTIME_MANIFEST)) {
-    const runtimeManifest = yaml.safeLoad(fs.readFileSync(defaults.LEGACY_RUNTIME_MANIFEST, 'utf8'))
+  if (await fs.exists(defaults.LEGACY_RUNTIME_MANIFEST)) {
+    const runtimeManifest = yaml.safeLoad(await fs.readFile(defaults.LEGACY_RUNTIME_MANIFEST, 'utf8'))
     legacyAppConfig.runtimeManifest = runtimeManifest
     // populate index
     const baseKey = `${defaults.APPLICATION_CONFIG_KEY}.runtimeManifest`
@@ -454,7 +473,7 @@ function rewritePathsInPlace (appConfigWithIncludeIndex, options) {
 }
 
 /** @private */
-function mergeLegacyAppConfig (appConfigWithIncludeIndex, legacyAppConfigWithIncludeIndex) {
+async function mergeLegacyAppConfig (appConfigWithIncludeIndex, legacyAppConfigWithIncludeIndex) {
   // NOTE: here we do a simplified merge, deep merge with copy might be wanted
 
   // only need to merge application configs as legacy config system does not work with extensions
@@ -487,33 +506,34 @@ function mergeLegacyAppConfig (appConfigWithIncludeIndex, legacyAppConfigWithInc
 }
 
 /** @private */
-function buildAllConfigs (userConfig, commonConfig, includeIndex) {
+async function buildAllConfigs (userConfig, commonConfig, includeIndex) {
   return {
-    ...buildAppConfig(userConfig, commonConfig, includeIndex),
-    ...buildExtConfigs(userConfig, commonConfig, includeIndex)
+    ...(await buildAppConfig(userConfig, commonConfig, includeIndex)),
+    ...(await buildExtConfigs(userConfig, commonConfig, includeIndex))
   }
 }
 
 /** @private */
-function buildExtConfigs (userConfig, commonConfig, includeIndex) {
+async function buildExtConfigs (userConfig, commonConfig, includeIndex) {
   const configs = {}
   if (userConfig[defaults.EXTENSIONS_CONFIG_KEY]) {
-    Object.entries(userConfig[defaults.EXTENSIONS_CONFIG_KEY]).forEach(([extName, singleUserConfig]) => {
-      configs[extName] = buildSingleConfig(extName, singleUserConfig, commonConfig, includeIndex)
+    const entries = Object.entries(userConfig[defaults.EXTENSIONS_CONFIG_KEY])
+    for (const [extName, singleUserConfig] of entries) {
+      configs[extName] = await buildSingleConfig(extName, singleUserConfig, commonConfig, includeIndex)
       // extensions have an extra operations field
       configs[extName].operations = singleUserConfig.operations
       // this is checked by the schema validation
       // if (!configs[extName].operations) {
       //   throw new Error(`Missing 'operations' config field for extension point ${extName}`)
       // }
-    })
+    }
   }
   return configs
 }
 
 /** @private */
-function buildAppConfig (userConfig, commonConfig, includeIndex) {
-  const fullAppConfig = buildSingleConfig(defaults.APPLICATION_CONFIG_KEY,
+async function buildAppConfig (userConfig, commonConfig, includeIndex) {
+  const fullAppConfig = await buildSingleConfig(defaults.APPLICATION_CONFIG_KEY,
     userConfig[defaults.APPLICATION_CONFIG_KEY],
     commonConfig,
     includeIndex)
@@ -527,7 +547,7 @@ function buildAppConfig (userConfig, commonConfig, includeIndex) {
 }
 
 /** @private */
-function buildSingleConfig (configName, singleUserConfig, commonConfig, includeIndex) {
+async function buildSingleConfig (configName, singleUserConfig, commonConfig, includeIndex) {
   // used as subfolder folder in dist, converts to a single dir, e.g. dx/excshell/1 =>
   // dx-excshell-1 and dist/dx-excshell-1/actions/action-xyz.zip
   const subFolderName = configName.replace(/\//g, '-')
@@ -585,7 +605,7 @@ function buildSingleConfig (configName, singleUserConfig, commonConfig, includeI
   const manifest = singleUserConfig.runtimeManifest
 
   config.app.hasBackend = !!manifest
-  config.app.hasFrontend = fs.existsSync(web)
+  config.app.hasFrontend = await fs.exists(web)
   config.app.dist = path.resolve(dist, dist === defaultDistPath ? subFolderName : '')
 
   if (singleUserConfig.events) {
@@ -670,6 +690,6 @@ function resolveToRoot (pathValue, includedFromConfigPath, options = {}) {
 
 module.exports = {
   load,
-  validateAppConfig,
-  coalesceAppConfig
+  validate,
+  coalesce
 }
