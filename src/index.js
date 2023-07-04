@@ -84,6 +84,8 @@ const cloneDeep = require('lodash.clonedeep')
  *    configSchema: { app.config.yaml configSchema field }
  *    aio: {...aioConfig...},
  *    packagejson: {...package.json...},
+ *    configSchema: {...app.config.yaml configSchema field as is},
+ *    productDependencies: {...app.config.yaml productDependencies field as is},
  *    all: {
  *      OPTIONAL:'application': {
  *        app: {
@@ -177,7 +179,8 @@ async function load (options = {}) {
     throw new Error(`Couldn't find configuration in '${process.cwd()}', make sure to add at least one extension or a standalone app`)
   }
   return {
-    configSchema: appConfig?.configSchema,
+    configSchema: appConfig?.configSchema || [],
+    productDependencies: appConfig?.productDependencies || [],
     all,
     implements: impl, // e.g. 'dx/excshell/1', 'application'
     // includeIndex keeps a map from config keys to files that includes them and the relative key in the file.
