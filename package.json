@@ -6,7 +6,8 @@
   "license": "Apache-2.0",
   "main": "src/index.js",
   "files": [
-    "src"
+    "src",
+    "schema"
   ],
   "scripts": {
     "test": "npm run lint && npm run unit-tests",
