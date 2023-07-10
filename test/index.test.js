@@ -518,6 +518,19 @@ application:
     await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({ configSchema: [{ default: 'hello', enum: ['hello', 'hola', 'bonjour'], envKey: 'HELLO', secret: true, title: 'yo', type: 'string' }, { envKey: 'BYE', type: 'boolean' }] }))
   })
 
+  test('valid no configSchema', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          runtimeManifest: { packages: {}}
+`
+      }
+    )
+    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({ configSchema: [] }))
+  })
+
   test('invalid schema: web.res-header instead of web.response-headers', async () => {
     global.fakeFileSystem.addJson(
       {
@@ -551,20 +564,6 @@ application:
       }
     )
     await expect(appConfig.load({})).rejects.toThrow('"missingProperty": "packages"')
-  })
-
-  test('invalid schema: configSchema has no items', async () => {
-    global.fakeFileSystem.addJson(
-      {
-        '/package.json': '{}',
-        '/app.config.yaml': `
-        configSchema: []
-        application:
-          runtimeManifest: { packages: {}}
-`
-      }
-    )
-    await expect(appConfig.load({})).rejects.toThrow('"message": "must NOT have fewer than 1 items"')
   })
 
   test('invalid schema: configSchema has an item without envKey', async () => {
@@ -628,6 +627,126 @@ application:
       }
     )
     await expect(appConfig.load({})).rejects.toThrow('must be equal to one of the allowed values')
+  })
+
+  test('valid schema with productDependencies', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        productDependencies:
+          - code: 'somecode'
+            minVersion: '1.0.0'
+            maxVersion: '2.0.0'
+          - code: 'someOthercode'
+            minVersion: '1.0.0'
+            maxVersion: '3.0.0'
+        application:
+          runtimeManifest: { packages: {}}
+`
+      }
+    )
+    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({ productDependencies: [{ code: 'somecode', maxVersion: '2.0.0', minVersion: '1.0.0' }, { code: 'someOthercode', maxVersion: '3.0.0', minVersion: '1.0.0' }] }))
+  })
+
+  test('valid no productDependencies', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          runtimeManifest: { packages: {}}
+`
+      }
+    )
+    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({ productDependencies: [] }))
+  })
+
+  test('valid productDependencies: no items', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        productDependencies: []
+        application:
+          runtimeManifest: { packages: {}}
+`
+      }
+    )
+    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({ productDependencies: [] }))
+  })
+
+  test('invalid productDependencies: missing minVersion', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        productDependencies:
+          - code: 'somecode'
+            minVersion: '1.0.0'
+            maxVersion: '2.0.0'
+          - code: 'someOthercode'
+            maxVersion: '3.0.0'
+        application:
+          runtimeManifest: { packages: {}}
+`
+      }
+    )
+    await expect(appConfig.load({})).rejects.toThrow("must have required property 'minVersion'")
+  })
+
+  test('invalid productDependencies: missing maxVersion', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        productDependencies:
+          - code: 'somecode'
+            minVersion: '1.0.0'
+            maxVersion: '2.0.0'
+          - code: 'someOthercode'
+            minVersion: '3.0.0'
+        application:
+          runtimeManifest: { packages: {}}
+`
+      }
+    )
+    await expect(appConfig.load({})).rejects.toThrow("must have required property 'maxVersion'")
+  })
+
+  test('invalid productDependencies: missing code', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        productDependencies:
+          - 
+            minVersion: '1.0.0'
+            maxVersion: '2.0.0'
+        application:
+          runtimeManifest: { packages: {}}
+`
+      }
+    )
+    await expect(appConfig.load({})).rejects.toThrow("must have required property 'code'")
+  })
+
+  test('invalid productDependencies: invalid extra field', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        productDependencies:
+          - code: somecode
+            minVersion: '1.0.0'
+            maxVersion: '2.0.0'
+            midVersion: 'field'
+        application:
+          runtimeManifest: { packages: {}}
+`
+      }
+    )
+    await expect(appConfig.load({})).rejects.toThrow('must NOT have additional properties')
   })
 })
 
