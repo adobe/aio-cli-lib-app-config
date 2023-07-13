@@ -793,11 +793,33 @@ describe('coalesce config', () => {
     global.loadFixtureApp('exc-complex-includes')
     coalesced = await appConfig.coalesce('app.config.yaml', { absolutePaths: true }) // {} or not for coverage
     expect(coalesced.config).toEqual({ extensions: { 'dx/excshell/1': { actions: winCompat('/src/dx-excshell-1/actions'), operations: { view: [{ impl: 'index.html', type: 'web' }] }, runtimeManifest: { packages: { 'my-exc-package': { actions: { action: { annotations: { final: true, 'require-adobe-auth': true }, function: winCompat('/src/dx-excshell-1/actions/action.js'), include: [[winCompat('/src/dx-excshell-1/actions/somefile.txt'), 'file.txt']], inputs: { LOG_LEVEL: 'debug' }, limits: { concurrency: 189 }, runtime: 'nodejs:14', web: 'yes' } }, license: 'Apache-2.0' } } }, web: winCompat('/src/dx-excshell-1/web-src') } } })
-    // pick some
+    // index stay relative to cwd
     expect(coalesced.includeIndex.extensions).toEqual({ file: 'app.config.yaml', key: 'extensions' })
     expect(coalesced.includeIndex['extensions.dx/excshell/1']).toEqual({ file: 'app.config2.yaml', key: 'dx/excshell/1' })
     expect(coalesced.includeIndex['extensions.dx/excshell/1.runtimeManifest']).toEqual({ file: 'src/dx-excshell-1/ext.config.yaml', key: 'runtimeManifest' })
     expect(coalesced.includeIndex['extensions.dx/excshell/1.runtimeManifest.packages.my-exc-package.actions']).toEqual({ file: 'src/dx-excshell-1/actions/pkg.manifest.yaml', key: 'packages.my-exc-package.actions' })
     expect(coalesced.includeIndex['extensions.dx/excshell/1.runtimeManifest.packages.my-exc-package.actions.action']).toEqual({ file: 'src/dx-excshell-1/actions/sub/action.manifest.yaml', key: 'action' })
+  })
+
+  test('app.config.yaml not in root folder, relative paths', async () => {
+    // this test is to ensure that files are relative to the app.config.yaml file and not the current working directory
+    global.loadFixtureApp('app-not-in-root')
+    coalesced = await appConfig.coalesce('app/app.config.yaml') // {} or not for coverage
+    // here we want to make sure to not have something like actions: app/myactions or function: app/myactions/action.js
+    expect(coalesced.config).toEqual({ application: { actions: 'myactions', runtimeManifest: { packages: { 'my-app-package': { actions: { action: { annotations: { final: true, 'require-adobe-auth': true }, function: 'myactions/action.js', include: [['myactions/somefile.txt', 'file.txt']], inputs: { LOG_LEVEL: 'debug' }, runtime: 'nodejs:14', web: 'yes' } } } } } } })
+    // index is still relative to cwd though!
+    expect(coalesced.includeIndex.application).toEqual({ file: 'app/app.config.yaml', key: 'application' })
+    expect(coalesced.includeIndex['application.runtimeManifest.packages.my-app-package.actions.action']).toEqual({ file: 'app/app.config.yaml', key: 'application.runtimeManifest.packages.my-app-package.actions.action' })
+    expect(coalesced.includeIndex['application.runtimeManifest.packages.my-app-package.actions.action.function']).toEqual({ file: 'app/myactions/action.config.yaml', key: 'function' })
+  })
+
+  test('app.config.yaml not in root folder, absolute paths', async () => {
+    global.loadFixtureApp('app-not-in-root')
+    coalesced = await appConfig.coalesce('app/app.config.yaml', { absolutePaths: true }) // {} or not for coverage
+    expect(coalesced.config).toEqual({ application: { actions: '/app/myactions', runtimeManifest: { packages: { 'my-app-package': { actions: { action: { annotations: { final: true, 'require-adobe-auth': true }, function: '/app/myactions/action.js', include: [['/app/myactions/somefile.txt', 'file.txt']], inputs: { LOG_LEVEL: 'debug' }, runtime: 'nodejs:14', web: 'yes' } } } } } } })
+    // index is still relative to cwd though!
+    expect(coalesced.includeIndex.application).toEqual({ file: 'app/app.config.yaml', key: 'application' })
+    expect(coalesced.includeIndex['application.runtimeManifest.packages.my-app-package.actions.action']).toEqual({ file: 'app/app.config.yaml', key: 'application.runtimeManifest.packages.my-app-package.actions.action' })
+    expect(coalesced.includeIndex['application.runtimeManifest.packages.my-app-package.actions.action.function']).toEqual({ file: 'app/myactions/action.config.yaml', key: 'function' })
   })
 })

@@ -264,17 +264,28 @@ async function loadCommonConfig (/* istanbul ignore next */options = {}) {
 // }
 
 /**
- * Resolve all includes, update relative paths and return a coalesced app configuration object.
+ * Resolve all includes, update relative paths and return a coalesced app
+ * configuration object.
+ *
+ * Returns the appConfig along with an index of config keys to config file. The
+ * config file paths in the index are absolute.
  *
  * @param {string} appConfigFile path to the app.config.yaml
  * @param {object} options options
- * @param {object} options.absolutePaths boolean, true for absolute paths, default for relative to appConfigFile directory.
- * @returns {object} single appConfig with resolved includes
+ * @param {object} options.absolutePaths boolean, true for rewriting
+ *  configuration paths to absolute, false for relative to the appConfigFile
+ *  directory. Defaults to false. Note, that config values will never be
+ *  rewritten as relative to the cwd. But also note that
+ *  this option doesn't have any effect on the includeIndex paths which stay
+ *  relative to the cwd.
+ * @returns {object} { config, includeIndex }
  */
 async function coalesce (appConfigFile, options = {}) {
   // this code is traversing app.config.yaml recursively to resolve all $includes directives
 
   const absolutePaths = options.absolutePaths === undefined ? false : options.absolutePaths
+  const appRoot = path.dirname(appConfigFile)
+
   const config = yaml.safeLoad(await fs.readFile(appConfigFile, 'utf8'))
   // keep an index that will map keys like 'extensions.abc.runtimeManifest' to the config file where there are defined
   const includeIndex = {}
@@ -358,7 +369,7 @@ async function coalesce (appConfigFile, options = {}) {
   }
 
   const appConfigWithIncludeIndex = { config, includeIndex }
-  rewritePathsInPlace(appConfigWithIncludeIndex, { absolutePaths })
+  rewritePathsInPlace(appConfigWithIncludeIndex, { absolutePaths, appRoot })
 
   return appConfigWithIncludeIndex
 }
@@ -466,7 +477,7 @@ function rewritePathsInPlace (appConfigWithIncludeIndex, options) {
 
     if (typeof value === 'string' && PATH_KEYS.filter(reg => fullKey.match(reg)).length) {
       // rewrite path value to be relative to the root instead of being relative to the config file that includes it
-      parentObj[key] = resolveToRoot(value, includedFromConfigFile, { absolutePaths: options.absolutePaths })
+      parentObj[key] = resolveToRoot(value, includedFromConfigFile, options)
     }
     if (typeof value === 'object') {
       // object or Array
@@ -685,10 +696,16 @@ async function buildSingleConfig (configName, singleUserConfig, commonConfig, in
 function resolveToRoot (pathValue, includedFromConfigPath, options = {}) {
   // path.resolve => support both absolute pathValue and relative (relative joins with
   // config dir and process.cwd, absolute returns pathValue)
-  return options.absolutePaths
-    ? path.resolve(path.dirname(includedFromConfigPath), pathValue)
-    // if relative keep unix paths
-    : path.join(path.dirname(includedFromConfigPath), pathValue).split(path.sep).join(path.posix.sep)
+  if (options.absolutePaths) {
+    return path.resolve(path.dirname(includedFromConfigPath), pathValue)
+  }
+
+  // relative paths
+  if (options.appRoot) {
+    // make sure path is relative to appRoot and not cwd
+    includedFromConfigPath = path.relative(options.appRoot, includedFromConfigPath)
+  }
+  return path.join(path.dirname(includedFromConfigPath), pathValue).split(path.sep).join(path.posix.sep)
 }
 
 module.exports = {
