@@ -1,6 +1,6 @@
 {
   "name": "@adobe/aio-cli-lib-app-config",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "node lib to provide a consistent interface to various config files that make up Adobe Developer App Builder applications and extensions",
   "repository": "https://github.com/adobe/aio-cli-lib-app-config/",
   "license": "Apache-2.0",
