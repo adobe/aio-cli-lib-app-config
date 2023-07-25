@@ -1,0 +1,8 @@
+application:
+  actions: 'myactions'
+  runtimeManifest:
+    packages:
+      my-app-package:
+        actions:
+          action:
+            $include: './myactions/action.config.yaml'
