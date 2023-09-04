@@ -501,21 +501,50 @@ application:
         application:
           runtimeManifest: { packages: {}}
         configSchema:
-          - envKey: HELLO
-            type: string
-            secret: true
-            default: hello
-            title: yo
-            enum:
-              - hello
-              - hola
-              - bonjour
-          - envKey: BYE
-            type: boolean
+          properties:
+            - envKey: HELLO
+              type: string
+              secret: true
+              default: hello
+              title: yo
+              enum:
+                - hello
+                - hola
+                - bonjour
+            - envKey: BYE
+              type: boolean
 `
       }
     )
-    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({ configSchema: [{ default: 'hello', enum: ['hello', 'hola', 'bonjour'], envKey: 'HELLO', secret: true, title: 'yo', type: 'string' }, { envKey: 'BYE', type: 'boolean' }] }))
+    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({ configSchema: { properties: [{ default: 'hello', enum: ['hello', 'hola', 'bonjour'], envKey: 'HELLO', secret: true, title: 'yo', type: 'string' }, { envKey: 'BYE', type: 'boolean' }] } }))
+  })
+
+  test('valid configSchema with two fields a description and a title', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          runtimeManifest: { packages: {}}
+        configSchema:
+          title: 'config title'
+          description: 'config description'
+          properties:
+            - envKey: HELLO
+              type: string
+              secret: true
+              default: hello
+              title: yo
+              enum:
+                - hello
+                - hola
+                - bonjour
+            - envKey: BYE
+              type: boolean
+`
+      }
+    )
+    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({ configSchema: { title: 'config title', description: 'config description', properties: [{ default: 'hello', enum: ['hello', 'hola', 'bonjour'], envKey: 'HELLO', secret: true, title: 'yo', type: 'string' }, { envKey: 'BYE', type: 'boolean' }] } }))
   })
 
   test('valid no configSchema', async () => {
@@ -528,7 +557,7 @@ application:
 `
       }
     )
-    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({ configSchema: [] }))
+    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({ configSchema: {} }))
   })
 
   test('invalid schema: web.res-header instead of web.response-headers', async () => {
@@ -571,8 +600,7 @@ application:
       {
         '/package.json': '{}',
         '/app.config.yaml': `
-        configSchema:
-          - type: string
+        configSchema: { properties: [ { type: string } ] }
         application:
           runtimeManifest: { packages: {}}
 `
@@ -586,8 +614,7 @@ application:
       {
         '/package.json': '{}',
         '/app.config.yaml': `
-        configSchema:
-          - envKey: HELLO
+        configSchema: { properties: [ { envKey: HELLO} ] }
         application:
           runtimeManifest: { packages: {}}
 `
@@ -601,10 +628,7 @@ application:
       {
         '/package.json': '{}',
         '/app.config.yaml': `
-        configSchema:
-          - envKey: HELLO
-            type: string
-            somenotallowed: prop
+        configSchema: { properties: [ { envKey: HELLO, type: string, somenotallowed: prop} ] }
         application:
           runtimeManifest: { packages: {}}
 `
@@ -618,15 +642,41 @@ application:
       {
         '/package.json': '{}',
         '/app.config.yaml': `
-        configSchema:
-          - envKey: HELLO
-            type: invalid
+        configSchema: { properties: [ { envKey: HELLO, type: invalid} ] }
         application:
           runtimeManifest: { packages: {}}
 `
       }
     )
     await expect(appConfig.load({})).rejects.toThrow('must be equal to one of the allowed values')
+  })
+
+  test('invalid schema: configSchema with an invalid option', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        configSchema: { invalid: 'key', properties: [ { envKey: HELLO } ] }
+        application:
+          runtimeManifest: { packages: {}}
+`
+      }
+    )
+    await expect(appConfig.load({})).rejects.toThrow('Missing or invalid keys in app.config.yaml')
+  })
+
+  test('invalid schema: configSchema without properties', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        configSchema: { title: 'config title' }
+        application:
+          runtimeManifest: { packages: {}}
+`
+      }
+    )
+    await expect(appConfig.load({})).rejects.toThrow('Missing or invalid keys in app.config.yaml')
   })
 
   test('valid schema with productDependencies', async () => {

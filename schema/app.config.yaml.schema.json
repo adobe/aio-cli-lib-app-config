@@ -202,6 +202,15 @@
       }
     },
     "configSchema": {
+      "type": "object",
+      "properties": {
+        "description": { "type": "string", "maxLength": 1000 },
+        "title": { "type": "string", "maxLength": 200 },
+        "properties": { "$ref": "#/definitions/configSchemaItems" }
+      },
+      "required": ["properties"]
+    },
+    "configSchemaItems": {
       "type": "array",
       "maxItems": 50,
       "items": {

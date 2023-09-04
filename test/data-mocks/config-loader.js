@@ -451,7 +451,7 @@ module.exports = (appFixtureName, mockedAIOConfig, rewriteMockConfig = {}) => {
   return {
     ...config,
     aio: mockedAIOConfig,
-    configSchema: config.configSchema || [],
+    configSchema: config.configSchema || {},
     productDependencies: config.productDependencies || []
   }
 }
