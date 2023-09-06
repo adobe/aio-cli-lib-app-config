@@ -103,7 +103,7 @@
     "packages": {
       "type": "object",
       "patternProperties": {
-        "^[^\n]+$": {
+        "^([\\w]|[\\w][\\w@ .-]*[\\w@.-]+)$": {
           "$ref": "#/definitions/package"
         }
       },
@@ -119,7 +119,7 @@
     "actions": {
       "type": "object",
       "patternProperties": {
-        "^[^\n]+$": {
+        "^([\\w]|[\\w][\\w@ .-]*[\\w@.-]+)$": {
           "$ref": "#/definitions/action"
         }
       },
