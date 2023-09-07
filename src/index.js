@@ -179,7 +179,7 @@ async function load (options = {}) {
     throw new Error(`Couldn't find configuration in '${process.cwd()}', make sure to add at least one extension or a standalone app`)
   }
   return {
-    configSchema: appConfig?.configSchema || [],
+    configSchema: appConfig?.configSchema || {},
     productDependencies: appConfig?.productDependencies || [],
     all,
     implements: impl, // e.g. 'dx/excshell/1', 'application'
@@ -272,7 +272,7 @@ async function loadCommonConfig (/* istanbul ignore next */options = {}) {
  *
  * @param {string} appConfigFile path to the app.config.yaml
  * @param {object} options options
- * @param {object} options.absolutePaths boolean, true for rewriting
+ * @param {boolean} options.absolutePaths boolean, true for rewriting
  *  configuration paths to absolute, false for relative to the appConfigFile
  *  directory. Defaults to false. Note, that config values will never be
  *  rewritten as relative to the cwd. But also note that
