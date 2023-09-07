@@ -516,7 +516,21 @@ application:
 `
       }
     )
-    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({ configSchema: { properties: [{ default: 'hello', enum: ['hello', 'hola', 'bonjour'], envKey: 'HELLO', secret: true, title: 'yo', type: 'string' }, { envKey: 'BYE', type: 'boolean' }] } }))
+    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({
+      configSchema: {
+        properties: [{
+          default: 'hello',
+          enum: ['hello', 'hola', 'bonjour'],
+          envKey: 'HELLO',
+          secret: true,
+          title: 'yo',
+          type: 'string'
+        }, {
+          envKey: 'BYE',
+          type: 'boolean'
+        }]
+      }
+    }))
   })
 
   test('valid configSchema with two fields a description and a title', async () => {
@@ -544,7 +558,24 @@ application:
 `
       }
     )
-    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({ configSchema: { title: 'config title', description: 'config description', properties: [{ default: 'hello', enum: ['hello', 'hola', 'bonjour'], envKey: 'HELLO', secret: true, title: 'yo', type: 'string' }, { envKey: 'BYE', type: 'boolean' }] } }))
+    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({
+      configSchema: {
+        title: 'config title',
+        description: 'config description',
+        properties: [{
+          default: 'hello',
+          enum: ['hello', 'hola', 'bonjour'],
+          envKey: 'HELLO',
+          secret: true,
+          title: 'yo',
+          type: 'string'
+        }, {
+          envKey:
+          'BYE',
+          type: 'boolean'
+        }]
+      }
+    }))
   })
 
   test('valid no configSchema', async () => {
