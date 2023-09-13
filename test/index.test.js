@@ -507,6 +507,7 @@ application:
               secret: true
               default: hello
               title: yo
+              description: my description
               enum:
                 - hello
                 - hola
@@ -524,7 +525,8 @@ application:
           envKey: 'HELLO',
           secret: true,
           title: 'yo',
-          type: 'string'
+          type: 'string',
+          description: 'my description'
         }, {
           envKey: 'BYE',
           type: 'boolean'

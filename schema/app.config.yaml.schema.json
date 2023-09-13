@@ -218,6 +218,7 @@
         "properties": {
           "type": { "type": "string", "enum": ["string", "boolean"] },
           "title": { "type": "string", "maxLength": 200 },
+          "description": { "type": "string", "maxLength": 1000 },
           "envKey": { "type": "string", "pattern": "[a-zA-Z_]{1,}[a-zA-Z0-9_]{0,}", "maxLength": 100 },
           "enum": { "type": "array", "items": { "$ref": "#/definitions/configSchemaValue" }, "minItems": 1, "maxItems": 100 },
           "default": { "$ref": "#/definitions/configSchemaValue" },
