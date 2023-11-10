@@ -228,7 +228,7 @@
         "additionalProperties": false
       }
     },
-    "configSchemaValue": { "type": "string", "maxLength": 1000 },
+    "configSchemaValue": { "type": ["string", "boolean"], "maxLength": 1000 },
     "productDependencies": {
       "type": "array",
       "items": {

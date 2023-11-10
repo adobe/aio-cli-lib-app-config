@@ -580,6 +580,32 @@ application:
     }))
   })
 
+  test('default boolean = true', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          runtimeManifest: { packages: {}}
+        configSchema:
+          properties:
+            - envKey: BYE
+              type: boolean
+              default: true
+`
+      }
+    )
+    await expect(appConfig.load({})).resolves.toEqual(expect.objectContaining({
+      configSchema: {
+        properties: [{
+          envKey: 'BYE',
+          type: 'boolean',
+          default: true
+        }]
+      }
+    }))
+  })
+
   test('valid no configSchema', async () => {
     global.fakeFileSystem.addJson(
       {
