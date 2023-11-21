@@ -323,10 +323,10 @@ extensions:
     config = await appConfig.load({ validateAppConfig: false })
     // the notallowed config is not picked up
     expect(config.all.application.web).toEqual({
-      distDev: '/dist/application/web-dev',
-      distProd: '/dist/application/web-prod',
-      injectedConfig: '/web-src/src/config.json',
-      src: '/web-src'
+      distDev: winCompat('/dist/application/web-dev'),
+      distProd: winCompat('/dist/application/web-prod'),
+      injectedConfig: winCompat('/web-src/src/config.json'),
+      src: winCompat('/web-src')
     })
   })
 
