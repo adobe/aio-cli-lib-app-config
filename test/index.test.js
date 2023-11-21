@@ -273,12 +273,61 @@ extensions:
     await expect(appConfig.load({})).rejects.toThrow('must have required property \'packages\'')
   })
 
+  test('app config with empty application implementation', async () => {
+    global.loadFixtureApp('app')
+    global.fakeFileSystem.addJson({
+      '/package.json': '{}',
+      'app.config.yaml':
+`
+    application: {}
+`
+    })
+    config = await appConfig.load()
+    expect(config.all.application).toBeDefined()
+    expect(config.implements).toEqual(['application'])
+  })
+
   // options
   test('standalone app config - ignoreAioConfig=true', async () => {
     global.loadFixtureApp('app')
     config = await appConfig.load({ ignoreAioConfig: true })
     const mockConfig = getMockConfig('app', {})
     expect(config).toEqual(mockConfig)
+  })
+
+  test('invalid app config with validateAppConfig=true', async () => {
+    global.loadFixtureApp('app')
+    global.fakeFileSystem.addJson({
+      '/package.json': '{}',
+      'app.config.yaml':
+`
+    application: {
+      web: { notallowed: true }
+    }
+`
+    })
+    await expect(appConfig.load({ validateAppConfig: true })).rejects.toThrow('Missing or invalid keys in app.config.yaml')
+  })
+
+  test('invalid app config with validateAppConfig=false', async () => {
+    global.loadFixtureApp('app')
+    global.fakeFileSystem.addJson({
+      '/package.json': '{}',
+      'app.config.yaml':
+`
+    application: {
+      web: { notallowed: true }
+    }
+`
+    })
+    config = await appConfig.load({ validateAppConfig: false })
+    // the notallowed config is not picked up
+    expect(config.all.application.web).toEqual({
+      distDev: '/dist/application/web-dev',
+      distProd: '/dist/application/web-prod',
+      injectedConfig: '/web-src/src/config.json',
+      src: '/web-src'
+    })
   })
 
   test('no implementation - allowNoImpl=false', async () => {

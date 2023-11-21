@@ -50,29 +50,5 @@
   },
   "engines": {
     "node": "^14.18 || ^16.13 || >=18"
-  },
-  "jest": {
-    "collectCoverage": true,
-    "collectCoverageFrom": [
-      "src/**/*.js"
-    ],
-    "coverageThreshold": {
-      "global": {
-        "branches": 100,
-        "lines": 100,
-        "statements": 100
-      }
-    },
-    "testPathIgnorePatterns": [
-      "<rootDir>/jest.setup.js"
-    ],
-    "reporters": [
-      "default",
-      "jest-junit"
-    ],
-    "testEnvironment": "node",
-    "setupFilesAfterEnv": [
-      "./test/jest.setup.js"
-    ]
   }
 }

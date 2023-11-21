@@ -139,11 +139,14 @@ const cloneDeep = require('lodash.clonedeep')
  * @param {object} options options to load Config
  * @param {boolean} options.allowNoImpl do not throw if there is no implementation
  * @param {boolean} options.ignoreAioConfig do not load .aio config via aio-lib-core-config, which is loaded synchronously and blocks the main thread.
+ * @param {boolean} [options.validateAppConfig=true] set to false to not validate
  * @returns {object} the config
  */
 async function load (options = {}) {
   const allowNoImpl = options.allowNoImpl === undefined ? false : options.allowNoImpl
   const ignoreAioConfig = options.ignoreAioConfig === undefined ? false : options.ignoreAioConfig
+  const validateAppConfig = options.validateAppConfig === undefined ? true : options.validateAppConfig
+
   // *NOTE* it would be nice to support an appFolder option to load config from a different folder.
   // However, this requires to update aio-lib-core-config to support loading
   // from a different folder aswell (or enforcing ignore).
@@ -164,7 +167,9 @@ async function load (options = {}) {
     // this will resolve $include directives and output the app config into a single object
     // paths config values in $included files will be rewritten
     const appConfigWithIndex = await coalesce(defaults.USER_CONFIG_FILE, { absolutePaths: true })
-    await validate(appConfigWithIndex.config, { throws: true })
+    if (validateAppConfig) {
+      await validate(appConfigWithIndex.config, { throws: true })
+    }
     const mergedAppConfig = await mergeLegacyAppConfig(appConfigWithIndex, legacyAppConfigWithIndex)
 
     appConfig = mergedAppConfig.config
@@ -589,7 +594,13 @@ async function buildSingleConfig (configName, singleUserConfig, commonConfig, in
   // Let's search the config path that defines a key in the same config object level as 'web' or
   // 'action'
   const otherKeyInObject = Object.keys(singleUserConfig)[0]
-  const configFilePath = includeIndex[`${fullKeyPrefix}.${otherKeyInObject}`].file
+  let configFilePath
+  if (otherKeyInObject === undefined) {
+    // corner case if config is empty e.g. application: {}
+    configFilePath = includeIndex[`${fullKeyPrefix}`].file
+  } else {
+    configFilePath = includeIndex[`${fullKeyPrefix}.${otherKeyInObject}`].file
+  }
 
   const defaultActionPath = resolveToRoot('actions/', configFilePath)
   const defaultWebPath = resolveToRoot('web-src/', configFilePath)
