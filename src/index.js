@@ -137,8 +137,8 @@ const cloneDeep = require('lodash.clonedeep')
  *  }
  *
  * @param {object} options options to load Config
- * @param {boolean} options.allowNoImpl do not throw if there is no implementation
- * @param {boolean} options.ignoreAioConfig do not load .aio config via aio-lib-core-config, which is loaded synchronously and blocks the main thread.
+ * @param {boolean} [options.allowNoImpl=false] do not throw if there is no implementation
+ * @param {boolean} [options.ignoreAioConfig=false] do not load .aio config via aio-lib-core-config, which is loaded synchronously and blocks the main thread.
  * @param {boolean} [options.validateAppConfig=true] set to false to not validate
  * @returns {object} the config
  */
