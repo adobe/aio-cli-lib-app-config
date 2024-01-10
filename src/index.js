@@ -205,6 +205,7 @@ async function load (options = {}) {
  * @param {object} options options
  * @param {boolean} options.throws defaults to false, if true throws on validation error instead of returning the error
  * @throws if not valid
+ * @returns {object} keys: valid (boolean), errors (array)
  */
 async function validate (coalescedAppConfigObj, options = {}) {
   const throws = options.throws === undefined ? false : options.throws
