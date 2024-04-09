@@ -140,7 +140,7 @@
       "type": "object",
       "patternProperties": {
         "^[^\n]+$": {
-          "type": ["string", "boolean", "object"]
+          "type": ["string", "boolean"]
         }
       },
       "additionalProperties": false
