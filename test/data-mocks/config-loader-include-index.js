@@ -179,6 +179,22 @@ const appIncludeIndex = {
     file: 'app.config.yaml',
     key: 'application.runtimeManifest.packages.my-app-package.actions.action.inputs.LOG_LEVEL'
   },
+  'application.runtimeManifest.packages.my-app-package.actions.action.inputs.SOMETHING': {
+    file: 'app.config.yaml',
+    key: 'application.runtimeManifest.packages.my-app-package.actions.action.inputs.SOMETHING'
+  },
+  'application.runtimeManifest.packages.my-app-package.actions.action.inputs.SOMETHING.default': {
+    file: 'app.config.yaml',
+    key: 'application.runtimeManifest.packages.my-app-package.actions.action.inputs.SOMETHING.default'
+  },
+  'application.runtimeManifest.packages.my-app-package.actions.action.inputs.SOMETHING.description': {
+    file: 'app.config.yaml',
+    key: 'application.runtimeManifest.packages.my-app-package.actions.action.inputs.SOMETHING.description'
+  },
+  'application.runtimeManifest.packages.my-app-package.actions.action.inputs.SOMETHING.type': {
+    file: 'app.config.yaml',
+    key: 'application.runtimeManifest.packages.my-app-package.actions.action.inputs.SOMETHING.type'
+  },
   'application.runtimeManifest.packages.my-app-package.actions.action.runtime': {
     file: 'app.config.yaml',
     key: 'application.runtimeManifest.packages.my-app-package.actions.action.runtime'
@@ -621,6 +637,22 @@ const legacyIncludeIndex = {
   'application.runtimeManifest.packages.__APP_PACKAGE__.actions.action.inputs.LOG_LEVEL': {
     file: 'manifest.yml',
     key: 'packages.__APP_PACKAGE__.actions.action.inputs.LOG_LEVEL'
+  },
+  'application.runtimeManifest.packages.__APP_PACKAGE__.actions.action.inputs.SOMETHING': {
+    file: 'manifest.yml',
+    key: 'packages.__APP_PACKAGE__.actions.action.inputs.SOMETHING'
+  },
+  'application.runtimeManifest.packages.__APP_PACKAGE__.actions.action.inputs.SOMETHING.default': {
+    file: 'manifest.yml',
+    key: 'packages.__APP_PACKAGE__.actions.action.inputs.SOMETHING.default'
+  },
+  'application.runtimeManifest.packages.__APP_PACKAGE__.actions.action.inputs.SOMETHING.description': {
+    file: 'manifest.yml',
+    key: 'packages.__APP_PACKAGE__.actions.action.inputs.SOMETHING.description'
+  },
+  'application.runtimeManifest.packages.__APP_PACKAGE__.actions.action.inputs.SOMETHING.type': {
+    file: 'manifest.yml',
+    key: 'packages.__APP_PACKAGE__.actions.action.inputs.SOMETHING.type'
   },
   'application.runtimeManifest.packages.__APP_PACKAGE__.actions.action.runtime': {
     file: 'manifest.yml',

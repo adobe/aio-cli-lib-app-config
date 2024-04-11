@@ -45,7 +45,12 @@ function fullFakeRuntimeManifest (pathToActionFolder, pkgName1) {
             web: 'yes',
             runtime: 'nodejs:14',
             inputs: {
-              LOG_LEVEL: 'debug'
+              LOG_LEVEL: 'debug',
+              SOMETHING: {
+                type: 'string',
+                description: 'this is about something',
+                default: ''
+              }
             },
             annotations: {
               'require-adobe-auth': true,
