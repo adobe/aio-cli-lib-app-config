@@ -1,0 +1,246 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://adobe.io/schemas/app-builder/app.config.yaml.json/v2",
+  "type": "object",
+  "properties": {
+    "application": { "$ref": "#/definitions/application" },
+    "extensions": { "$ref": "#/definitions/extensions" },
+    "configSchema": { "$ref": "#/definitions/configSchema"},
+    "productDependencies": { "$ref": "#/definitions/productDependencies"}
+  },
+  "anyOf": [
+    {
+      "required": ["application"]
+    },
+    {
+      "required": ["extensions"]
+    }
+  ],
+  "definitions": {
+    "extensions": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9-_/\\-]+$": {
+          "$ref": "#/definitions/application",
+          "type": "object",
+          "properties": {
+            "operations": {
+              "type": "object",
+              "patternProperties": {
+                "^[^\n]+$": {
+                  "type":"array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": { "type": "string" },
+                      "impl": { "type": "string" }
+                    }
+                  },
+                  "minItems": 1
+                }
+              },
+              "minProperties": 1
+            }
+          },
+          "required": ["operations"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "application": {
+      "type": "object",
+      "properties": {
+        "runtimeManifest": { "$ref": "#/definitions/runtimeManifest" },
+        "actions": { "type": "string" },
+        "unitTest": { "type": "string" },
+        "e2eTest": { "type": "string" },
+        "dist": { "type": "string" },
+        "tvmurl": { "type": "string" },
+        "awsaccesskeyid": { "type": "string" },
+        "awssecretaccesskey": { "type": "string" },
+        "s3bucket": { "type": "string" },
+        "events": { "$ref": "#/definitions/events" },
+        "hostname": { "type": "string" },
+        "htmlcacheduration": { "type": "number" },
+        "jscacheduration": { "type": "number" },
+        "csscacheduration": { "type": "number" },
+        "imagecacheduration": { "type": "number" },
+        "hooks": { "$ref": "#/definitions/hooks" },
+        "web": { "$ref": "#/definitions/web" }
+      },
+      "required": []
+    },
+    "web": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "src": { "type": "string" },
+            "response-headers": {
+              "type": "object",
+              "patternProperties": {
+                "^[^\n]+$": {
+                  "type":"object",
+                  "patternProperties": { "^[^\n]+$": { "type":"string" } }
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "runtimeManifest": {
+      "type": "object",
+      "properties": {
+        "packages": { "$ref": "#/definitions/packages" }
+      },
+      "required": ["packages"]
+    },
+    "packages": {
+      "type": "object",
+      "patternProperties": {
+        "^([\\w]|[\\w][\\w@ .-]*[\\w@.-]+)$": {
+          "$ref": "#/definitions/package"
+        }
+      },
+      "additionalProperties": false
+    },
+    "package": {
+      "type": "object",
+      "properties": {
+        "license": { "type": "string" },
+        "actions": { "$ref": "#/definitions/actions" }
+      }
+    },
+    "actions": {
+      "type": "object",
+      "patternProperties": {
+        "^([\\w]|[\\w][\\w@ .-]*[\\w@.-]+)$": {
+          "$ref": "#/definitions/action"
+        }
+      },
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "function": { "type": "string" },
+        "web": { "type": "string" },
+        "runtime": { "type": "string" },
+        "inputs": { "$ref": "#/definitions/inputs" },
+        "annotations": { "$ref": "#/definitions/annotations" }
+      },
+      "required": []
+    },
+    "inputs": {
+      "type": "object",
+      "patternProperties": {
+        "^[^\n]+$": {
+          "type": ["string", "boolean", "object"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "type": "object",
+      "patternProperties": {
+        "^[^\n]+$": {
+          "type": ["string", "boolean"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "hooks": {
+      "type": "object",
+      "properties": {
+        "pre-app-build": { "type": "string" },
+        "post-app-build": { "type": "string" },
+        "build-actions": { "type": "string" },
+        "build-static": { "type": "string" },
+        "pre-app-deploy": { "type": "string" },
+        "post-app-deploy": { "type": "string" },
+        "deploy-actions": { "type": "string" },
+        "deploy-static": { "type": "string" },
+        "pre-app-undeploy": { "type": "string" },
+        "post-app-undeploy": { "type": "string" },
+        "undeploy-actions": { "type": "string" },
+        "undeploy-static": { "type": "string" },
+        "pre-app-run": { "type": "string" },
+        "post-app-run": { "type": "string" },
+        "serve-static": { "type": "string" }
+      }
+    },
+    "events": {
+      "type": "object",
+      "properties": {
+        "registrations": {
+          "type": "object",
+          "patternProperties": {
+            "^[^\n]+$": {
+              "type": "object",
+              "properties": {
+                "description": { "type": "string" },
+                "events_of_interest": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "provider_metadata": { "type": "string" },
+                      "event_codes": { "type": "array" }
+                    }
+                  }
+                },
+                "runtime_action": {"type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "configSchema": {
+      "type": "object",
+      "properties": {
+        "description": { "type": "string", "maxLength": 1000 },
+        "title": { "type": "string", "maxLength": 200 },
+        "properties": { "$ref": "#/definitions/configSchemaItems" }
+      },
+      "required": ["properties"]
+    },
+    "configSchemaItems": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["string", "boolean"] },
+          "title": { "type": "string", "maxLength": 200 },
+          "description": { "type": "string", "maxLength": 1000 },
+          "envKey": { "type": "string", "pattern": "[a-zA-Z_]{1,}[a-zA-Z0-9_]{0,}", "maxLength": 100 },
+          "enum": { "type": "array", "items": { "$ref": "#/definitions/configSchemaValue" }, "minItems": 1, "maxItems": 100 },
+          "default": { "$ref": "#/definitions/configSchemaValue" },
+          "secret": { "type": "boolean" }
+        },
+        "required": ["type", "envKey"],
+        "additionalProperties": false
+      }
+    },
+    "configSchemaValue": { "type": ["string", "boolean"], "maxLength": 1000 },
+    "productDependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "minVersion": { "type": "string", "pattern": "^[0-9]+.[0-9]+.[0-9]+$" },
+          "maxVersion": { "type": "string", "pattern": "^[0-9]+.[0-9]+.[0-9]+$" }
+        },
+        "required": ["code", "minVersion", "maxVersion"],
+        "additionalProperties": false
+      }
+    }
+  }
+}

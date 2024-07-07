@@ -7,5 +7,5 @@ on:
 
 jobs:
   build:
-    # if: github.repository == 'adobe/aio-cli-lib-app-config'
     uses: adobe/aio-reusable-workflows/.github/workflows/daily.yml@main
+    secrets: inherit
