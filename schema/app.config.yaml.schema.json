@@ -129,7 +129,12 @@
       "type": "object",
       "properties": {
         "function": { "type": "string" },
-        "web": { "type": "string" },
+        "web": { 
+          "anyOf" : [
+            {"type": "string" },
+            {"type": "boolean" }
+          ]
+        },
         "runtime": { "type": "string" },
         "inputs": { "$ref": "#/definitions/inputs" },
         "annotations": { "$ref": "#/definitions/annotations" },

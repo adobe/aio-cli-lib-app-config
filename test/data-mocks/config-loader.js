@@ -65,14 +65,14 @@ function fullFakeRuntimeManifest (pathToActionFolder, pkgName1) {
           },
           'action-zip': {
             function: winCompat(`${pathToActionFolder}/action-zip`),
-            web: 'yes',
+            web: 'true',
             runtime: 'nodejs:14'
           }
         },
         sequences: {
           'action-sequence': {
             actions: 'action, action-zip',
-            web: 'yes'
+            web: true
           }
         },
         triggers: {
