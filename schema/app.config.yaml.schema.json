@@ -132,7 +132,9 @@
         "web": { "type": "string" },
         "runtime": { "type": "string" },
         "inputs": { "$ref": "#/definitions/inputs" },
-        "annotations": { "$ref": "#/definitions/annotations" }
+        "annotations": { "$ref": "#/definitions/annotations" },
+        "web-export": false,
+        "raw-http": false
       },
       "required": []
     },

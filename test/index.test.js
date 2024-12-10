@@ -287,6 +287,44 @@ extensions:
     expect(config.implements).toEqual(['application'])
   })
 
+  test('action config with web-export not in annotations', async () => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{}',
+      '/app.config.yaml':
+`
+application:
+  runtimeManifest:
+    packages:
+      myapp:
+        actions:
+          generic:
+            function: actions/generic/index.js
+            runtime: nodejs:18
+            web-export: raw
+`
+    })
+    await expect(appConfig.load({})).rejects.toThrow('Missing or invalid keys in app.config.yaml:')
+  })
+
+  test('action config with raw-http not in annotations', async () => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{}',
+      '/app.config.yaml':
+`
+application:
+  runtimeManifest:
+    packages:
+      myapp:
+        actions:
+          generic:
+            function: actions/generic/index.js
+            runtime: nodejs:18
+            raw-http: true
+`
+    })
+    await expect(appConfig.load({})).rejects.toThrow('Missing or invalid keys in app.config.yaml:')
+  })
+
   // options
   test('standalone app config - ignoreAioConfig=true', async () => {
     global.loadFixtureApp('app')
