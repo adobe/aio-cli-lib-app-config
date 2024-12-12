@@ -62,7 +62,51 @@ describe('load config', () => {
   test('exc with events config', async () => {
     global.loadFixtureApp('exc-with-events')
     config = await appConfig.load({})
-    expect(config.all['dx/excshell/1']).toEqual(expect.objectContaining({ events: { registrations: { 'Demo name': { description: 'Demo description', events_of_interest: [{ event_codes: ['com.adobe.platform.gdpr.joberror', 'com.adobe.platform.gdpr.producterror'], provider_metadata: 'gdpr_events' }, { event_codes: ['test-code-skrishna', 'card_abandonment'], provider_metadata: 'aem' }], runtime_action: 'my-exc-package/action' }, 'Event Registration Default': { description: 'Registration for IO Events', events_of_interest: [{ event_codes: ['com.adobe.platform.gdpr.joberror', 'com.adobe.platform.gdpr.producterror'], provider_metadata: 'gdpr_events' }], runtime_action: 'my-exc-package/action' } } } }))
+    const eventObj = {
+      events:
+        {
+          registrations:
+            {
+              'Demo name':
+                {
+                  description: 'Demo description',
+                  events_of_interest:
+                    [
+                      {
+                        event_codes:
+                          [
+                            'com.adobe.platform.gdpr.joberror',
+                            'com.adobe.platform.gdpr.producterror'
+                          ],
+                        provider_metadata: 'gdpr_events'
+                      },
+                      {
+                        event_codes: ['test-code-skrishna', 'card_abandonment'],
+                        provider_metadata: 'aem'
+                      }
+                    ],
+                  runtime_action: 'my-exc-package/action'
+                },
+              'Event Registration Default':
+                {
+                  description: 'Registration for IO Events',
+                  events_of_interest:
+                    [
+                      {
+                        event_codes:
+                          [
+                            'com.adobe.platform.gdpr.joberror',
+                            'com.adobe.platform.gdpr.producterror'
+                          ],
+                        provider_metadata: 'gdpr_events'
+                      }
+                    ],
+                  runtime_action: 'my-exc-package/action'
+                }
+            }
+        }
+    }
+    expect(config.all['dx/excshell/1']).toEqual(expect.objectContaining(eventObj))
   })
 
   test('standalone app, exc and nui extension config', async () => {
@@ -285,6 +329,44 @@ extensions:
     config = await appConfig.load()
     expect(config.all.application).toBeDefined()
     expect(config.implements).toEqual(['application'])
+  })
+
+  test('action config with web-export not in annotations', async () => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{}',
+      '/app.config.yaml':
+`
+application:
+  runtimeManifest:
+    packages:
+      myapp:
+        actions:
+          generic:
+            function: actions/generic/index.js
+            runtime: nodejs:18
+            web-export: raw
+`
+    })
+    await expect(appConfig.load({})).rejects.toThrow('Missing or invalid keys in app.config.yaml:')
+  })
+
+  test('action config with raw-http not in annotations', async () => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{}',
+      '/app.config.yaml':
+`
+application:
+  runtimeManifest:
+    packages:
+      myapp:
+        actions:
+          generic:
+            function: actions/generic/index.js
+            runtime: nodejs:18
+            raw-http: true
+`
+    })
+    await expect(appConfig.load({})).rejects.toThrow('Missing or invalid keys in app.config.yaml:')
   })
 
   // options

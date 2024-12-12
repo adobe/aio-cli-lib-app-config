@@ -21,12 +21,12 @@ packages:
           concurrency: 189
       'action-zip':
         function: 'myactions/action-zip'
-        web: 'yes'
+        web: 'true'
         runtime: 'nodejs:14'
     sequences:
       'action-sequence':
         actions: 'action, action-zip'
-        web: 'yes'
+        web: true
     triggers:
       trigger1: null
     rules:
