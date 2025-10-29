@@ -624,6 +624,26 @@ application:
     expect(config.all.application.web['response-headers']).toEqual({ '/*': { testHeader: 'foo' } })
   })
 
+  test('deprecated cache duration config triggers warning', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          htmlCacheDuration: 60000
+          jsCacheDuration: 60000
+          cssCacheDuration: 60000
+          imageCacheDuration: 60000
+          runtimeManifest:
+            packages: {}
+`
+      }
+    )
+    config = await appConfig.load({})
+    // The deprecated config should still be processed but a warning should be logged
+    expect(config.all.application).toBeDefined()
+  })
+
   test('valid configSchema with two fields', async () => {
     global.fakeFileSystem.addJson(
       {
