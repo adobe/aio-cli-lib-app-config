@@ -14,7 +14,7 @@ const path = require('path')
 const yaml = require('js-yaml')
 const fs = require('fs-extra')
 const aioConfigLoader = require('@adobe/aio-lib-core-config')
-const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-cli-lib-app-config', { provider: 'debug' })
+const debugLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-cli-lib-app-config', { provider: 'debug' })
 const Ajv = require('ajv')
 const ajvAddFormats = require('ajv-formats')
 
@@ -386,7 +386,7 @@ async function legacyToAppConfig (commonConfig) {
   if (commonConfig.aio.cna !== undefined || commonConfig.aio.app !== undefined) {
     // this might have never have been seen in the wild as we don't know
     // what log-level users have set
-    aioLogger.error('App config in \'.aio\' file is deprecated. Please move your \'.aio.app\' or \'.aio.cna\' to \'app.config.yaml\'.')
+    console.error('Warning: [@adobe/aio-cli-lib-app-config] App config in \'.aio\' file is deprecated. Please move your \'.aio.app\' or \'.aio.cna\' to \'app.config.yaml\'.')
     const appConfig = { ...commonConfig.aio.app, ...commonConfig.aio.cna }
     Object.entries(appConfig).forEach(([k, v]) => {
       legacyAppConfig[k] = v
@@ -428,7 +428,7 @@ async function legacyToAppConfig (commonConfig) {
 
     // todo: new val usingLegacyHooks:Boolean
     if (Object.keys(hooks).length > 0) {
-      aioLogger.error('hooks in \'package.json\' are deprecated. Please move your hooks to \'app.config.yaml\' under the \'hooks\' key')
+      console.error('Warning: [@adobe/aio-cli-lib-app-config] hooks in \'package.json\' are deprecated. Please move your hooks to \'app.config.yaml\' under the \'hooks\' key')
       legacyAppConfig.hooks = hooks
       // build index
       includeIndex[`${defaults.APPLICATION_CONFIG_KEY}.hooks`] = { file: 'package.json', key: 'scripts' }
@@ -501,7 +501,7 @@ async function mergeLegacyAppConfig (appConfigWithIncludeIndex, legacyAppConfigW
   if (application && legacyApplication) {
     // for simplicity runtimeManifest is not merged, it's one or the other
     if (legacyApplication.runtimeManifest && application.runtimeManifest) {
-      aioLogger.warn('\'manifest.yml\' is ignored in favor of key \'runtimeManifest\' in \'app.config.yaml\'.')
+      console.error('Warning: [@adobe/aio-cli-lib-app-config] \'manifest.yml\' is ignored in favor of key \'runtimeManifest\' in \'app.config.yaml\'.')
     }
     // hooks are merged
     if (legacyApplication.hooks && application.hooks) {
@@ -580,14 +580,8 @@ async function buildSingleConfig (configName, singleUserConfig, commonConfig, in
     name: configName
   }
 
-  // Check for deprecated cache duration configs
-  if (singleUserConfig?.htmlCacheDuration) config.app.htmlCacheDuration = singleUserConfig.htmlCacheDuration
-  if (singleUserConfig?.jsCacheDuration) config.app.jsCacheDuration = singleUserConfig.jsCacheDuration
-  if (singleUserConfig?.cssCacheDuration) config.app.cssCacheDuration = singleUserConfig.cssCacheDuration
-  if (singleUserConfig?.imageCacheDuration) config.app.imageCacheDuration = singleUserConfig.imageCacheDuration
-
-  if (config.app.htmlCacheDuration || config.app.jsCacheDuration || config.app.cssCacheDuration || config.app.imageCacheDuration) {
-    aioLogger.warn('htmlCacheDuration, jsCacheDuration, cssCacheDuration, and imageCacheDuration are ignored. Please use cache-control response-headers instead.')
+  if (singleUserConfig.htmlCacheDuration || singleUserConfig.jsCacheDuration || singleUserConfig.cssCacheDuration || singleUserConfig.imageCacheDuration) {
+    console.error('Warning: [@adobe/aio-cli-lib-app-config] htmlCacheDuration, jsCacheDuration, cssCacheDuration, and imageCacheDuration are ignored. Please use cache-control response-headers instead.')
   }
 
   if (!includeIndex[fullKeyPrefix]) {
@@ -654,7 +648,7 @@ async function buildSingleConfig (configName, singleUserConfig, commonConfig, in
     config.manifest.packagePlaceholder = '__APP_PACKAGE__'
     config.manifest.package = config.manifest.full.packages && config.manifest.full.packages[config.manifest.packagePlaceholder]
     if (config.manifest.package) {
-      aioLogger.debug(`Use of ${config.manifest.packagePlaceholder} in manifest.yml.`)
+      debugLogger.debug(`Use of ${config.manifest.packagePlaceholder} in manifest.yml.`)
     }
     // Note: we should set the config.manifest.package also if it's not using a placeholder
   }
