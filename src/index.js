@@ -21,16 +21,10 @@ const ajvAddFormats = require('ajv-formats')
 // eslint-disable-next-line node/no-unpublished-require
 const schema = require('../schema/app.config.yaml.schema.json')
 
-// give or take daylight savings, and leap seconds ...
-const AboutAWeekInSeconds = '604800'
 const defaults = {
   defaultAppHostname: 'adobeio-static.net',
   defaultTvmUrl: 'https://firefly-tvm.adobe.io',
   defaultOwApihost: 'https://adobeioruntime.net',
-  defaultHTMLCacheDuration: '60',
-  defaultJSCacheDuration: AboutAWeekInSeconds,
-  defaultCSSCacheDuration: AboutAWeekInSeconds,
-  defaultImageCacheDuration: AboutAWeekInSeconds,
   stageAppHostname: 'dev.runtime.adobe.io',
   USER_CONFIG_FILE: 'app.config.yaml',
   LEGACY_RUNTIME_MANIFEST: 'manifest.yml',
@@ -586,6 +580,10 @@ async function buildSingleConfig (configName, singleUserConfig, commonConfig, in
     name: configName
   }
 
+  if (config.app.htmlCacheDuration || config.app.jsCacheDuration || config.app.cssCacheDuration || config.app.imageCacheDuration) {
+    aioLogger.warn('htmlCacheDuration, jsCacheDuration, cssCacheDuration, and imageCacheDuration are ignored. Please use cache-control response-headers instead.')
+  }
+
   if (!includeIndex[fullKeyPrefix]) {
     // config does not exist, return empty config
     return config
@@ -688,10 +686,6 @@ async function buildSingleConfig (configName, singleUserConfig, commonConfig, in
 
   config.app.defaultHostname = getCliEnv() === STAGE_ENV ? defaults.stageAppHostname : defaults.defaultAppHostname
   config.app.hostname = singleUserConfig.hostname || config.app.defaultHostname
-  config.app.htmlCacheDuration = singleUserConfig.htmlcacheduration || defaults.defaultHTMLCacheDuration
-  config.app.jsCacheDuration = singleUserConfig.jscacheduration || defaults.defaultJSCacheDuration
-  config.app.cssCacheDuration = singleUserConfig.csscacheduration || defaults.defaultCSSCacheDuration
-  config.app.imageCacheDuration = singleUserConfig.imagecacheduration || defaults.defaultImageCacheDuration
   config.hooks = singleUserConfig.hooks || {}
 
   config.imsOrgId = commonConfig.imsOrgId

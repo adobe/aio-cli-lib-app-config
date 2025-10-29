@@ -187,13 +187,6 @@ global.fakeConfig = {
       awsaccesskeyid: 'fakeAwsKeyId',
       awssecretaccesskey: 'fakeAwsSecretKey'
     }
-  },
-  // todo delete those should not be passed via aio now
-  app: {
-    htmlCacheDuration: 60,
-    jsCacheDuration: 604800,
-    cssCacheDuration: 604800,
-    imageCacheDuration: 604800
   }
 }
 

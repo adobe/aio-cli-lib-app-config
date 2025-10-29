@@ -61,10 +61,6 @@
         "s3bucket": { "type": "string" },
         "events": { "$ref": "#/definitions/events" },
         "hostname": { "type": "string" },
-        "htmlcacheduration": { "type": "number" },
-        "jscacheduration": { "type": "number" },
-        "csscacheduration": { "type": "number" },
-        "imagecacheduration": { "type": "number" },
         "hooks": { "$ref": "#/definitions/hooks" },
         "web": { "$ref": "#/definitions/web" }
       },
