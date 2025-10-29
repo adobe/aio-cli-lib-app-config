@@ -580,6 +580,12 @@ async function buildSingleConfig (configName, singleUserConfig, commonConfig, in
     name: configName
   }
 
+  // Check for deprecated cache duration configs
+  if (singleUserConfig?.htmlCacheDuration) config.app.htmlCacheDuration = singleUserConfig.htmlCacheDuration
+  if (singleUserConfig?.jsCacheDuration) config.app.jsCacheDuration = singleUserConfig.jsCacheDuration
+  if (singleUserConfig?.cssCacheDuration) config.app.cssCacheDuration = singleUserConfig.cssCacheDuration
+  if (singleUserConfig?.imageCacheDuration) config.app.imageCacheDuration = singleUserConfig.imageCacheDuration
+
   if (config.app.htmlCacheDuration || config.app.jsCacheDuration || config.app.cssCacheDuration || config.app.imageCacheDuration) {
     aioLogger.warn('htmlCacheDuration, jsCacheDuration, cssCacheDuration, and imageCacheDuration are ignored. Please use cache-control response-headers instead.')
   }
