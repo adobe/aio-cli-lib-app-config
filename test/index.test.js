@@ -46,6 +46,17 @@ describe('load config', () => {
     expect(config).toEqual(mockConfig)
   })
 
+  test('standalone app config with database', async () => {
+    global.loadFixtureApp('app-with-database')
+    config = await appConfig.load()
+    expect(config.all.application.database).toEqual({
+      'auto-provision': true,
+      region: 'emea'
+    })
+    expect(config.all.application.app.hasBackend).toBe(true)
+    expect(config.all.application.app.hasFrontend).toBe(true)
+  })
+
   test('not in an app', async () => {
     global.loadFixtureApp('not-in-app')
     await expect(appConfig.load()).rejects.toThrow(new Error('ENOENT: no such file or directory, open \'package.json\''))
@@ -1062,5 +1073,144 @@ describe('coalesce config', () => {
     expect(coalesced.includeIndex.application).toEqual({ file: 'app/app.config.yaml', key: 'application' })
     expect(coalesced.includeIndex['application.runtimeManifest.packages.my-app-package.actions.action']).toEqual({ file: 'app/app.config.yaml', key: 'application.runtimeManifest.packages.my-app-package.actions.action' })
     expect(coalesced.includeIndex['application.runtimeManifest.packages.my-app-package.actions.action.function']).toEqual({ file: 'app/myactions/action.config.yaml', key: 'function' })
+  })
+})
+
+describe('database config', () => {
+  beforeEach(async () => {
+    mockAIOConfig.get.mockImplementation(k => global.fakeConfig.tvm)
+    process.chdir('/')
+    global.fakeFileSystem.clear()
+    libEnv.getCliEnv.mockReturnValue('prod')
+  })
+
+  test('valid database configuration', async () => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{"name": "test-app", "version": "1.0.0"}',
+      '/app.config.yaml': `
+application:
+  runtimeManifest:
+    database:
+      auto-provision: true
+      region: 'emea'
+    packages:
+      my-app-package:
+        actions:
+          action:
+            function: 'actions/hello.js'
+            web: true
+`
+    })
+    const config = await appConfig.load()
+    expect(config.all.application.database).toEqual({
+      'auto-provision': true,
+      region: 'emea'
+    })
+  })
+
+  test('database configuration with auto-provision true', async () => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{"name": "test-app", "version": "1.0.0"}',
+      '/app.config.yaml': `
+application:
+  runtimeManifest:
+    database:
+      auto-provision: true
+    packages:
+      my-app-package:
+        actions:
+          action:
+            function: 'actions/hello.js'
+            web: true
+`
+    })
+    const config = await appConfig.load()
+    expect(config.all.application.database).toEqual({
+      'auto-provision': true,
+      region: 'amer'
+    })
+  })
+
+  test('database configuration with empty fields', async () => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{"name": "test-app", "version": "1.0.0"}',
+      '/app.config.yaml': `
+application:
+  runtimeManifest:
+    database: {}
+    packages:
+      my-app-package:
+        actions:
+          action:
+            function: 'actions/hello.js'
+            web: true
+`
+    })
+    await expect(appConfig.load()).rejects.toThrow('Missing or invalid keys in app.config.yaml:')
+  })
+
+  test('database configuration validation - valid', async () => {
+    const validConfig = {
+      application: {
+        runtimeManifest: {
+          database: {
+            'auto-provision': true,
+            region: 'apac'
+          },
+          packages: {
+            'my-app': {
+              actions: {
+                hello: {
+                  function: 'hello.js'
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    const validation = await appConfig.validate(validConfig)
+    expect(validation.valid).toBe(true)
+    expect(validation.errors).toBe(null)
+  })
+
+  test('invalid database configuration - invalid auto-provision type', async () => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{"name": "test-app", "version": "1.0.0"}',
+      '/app.config.yaml': `
+application:
+  runtimeManifest:
+    database:
+      auto-provision: 'invalid'
+      region: 'amer'
+    packages:
+      my-app-package:
+        actions:
+          action:
+            function: 'actions/hello.js'
+            web: true
+`
+    })
+    await expect(appConfig.load({})).rejects.toThrow('must be boolean')
+  })
+
+  test('invalid database configuration - invalid region', async () => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{"name": "test-app", "version": "1.0.0"}',
+      '/app.config.yaml': `
+application:
+  runtimeManifest:
+    database:
+      auto-provision: true
+      region: 'invalid-region'
+    packages:
+      my-app-package:
+        actions:
+          action:
+            function: 'actions/hello.js'
+            web: true
+`
+    })
+    await expect(appConfig.load({})).rejects.toThrow('must be equal to one of the allowed values')
   })
 })
