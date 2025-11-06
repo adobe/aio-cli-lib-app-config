@@ -1126,8 +1126,7 @@ application:
     })
     const config = await appConfig.load()
     expect(config.all.application.database).toEqual({
-      'auto-provision': true,
-      region: 'amer'
+      'auto-provision': true
     })
   })
 

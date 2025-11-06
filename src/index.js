@@ -639,10 +639,6 @@ async function buildSingleConfig (configName, singleUserConfig, commonConfig, in
   }
   if (manifest && manifest.database) {
     config.database = { ...manifest.database }
-    // set default region if auto-provision is true and no region is set
-    if (config.database['auto-provision'] === true && !config.database.region) {
-      config.database.region = 'amer'
-    }
   }
   if (commonConfig?.aio?.project) {
     config.project = commonConfig.aio.project
