@@ -114,7 +114,7 @@
       "type": "object",
       "properties": {
         "auto-provision": { "type": "boolean"},
-        "region": { "type": "string", "enum": ["amer", "emea", "apac"]}
+        "region": { "type": "string"}
       },
       "required": ["auto-provision"],
       "additionalProperties": false

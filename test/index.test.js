@@ -1192,24 +1192,4 @@ application:
     })
     await expect(appConfig.load({})).rejects.toThrow('must be boolean')
   })
-
-  test('invalid database configuration - invalid region', async () => {
-    global.fakeFileSystem.addJson({
-      '/package.json': '{"name": "test-app", "version": "1.0.0"}',
-      '/app.config.yaml': `
-application:
-  runtimeManifest:
-    database:
-      auto-provision: true
-      region: 'invalid-region'
-    packages:
-      my-app-package:
-        actions:
-          action:
-            function: 'actions/hello.js'
-            web: true
-`
-    })
-    await expect(appConfig.load({})).rejects.toThrow('must be equal to one of the allowed values')
-  })
 })
