@@ -146,10 +146,10 @@ const excSingleConfig = {
       dist: winCompat(`${root}dist/dx-excshell-1`),
       defaultHostname: 'adobeio-static.net',
       hostname: 'adobeio-static.net',
-      htmlCacheDuration: '60',
-      jsCacheDuration: '604800',
-      cssCacheDuration: '604800',
-      imageCacheDuration: '604800'
+      htmlCacheDuration: undefined,
+      jsCacheDuration: undefined,
+      cssCacheDuration: undefined,
+      imageCacheDuration: undefined
     },
     ow,
     s3: {
@@ -197,10 +197,10 @@ const nuiSingleConfig = {
       dist: winCompat(`${root}dist/dx-asset-compute-worker-1`),
       defaultHostname: 'adobeio-static.net',
       hostname: 'adobeio-static.net',
-      htmlCacheDuration: '60',
-      jsCacheDuration: '604800',
-      cssCacheDuration: '604800',
-      imageCacheDuration: '604800'
+      htmlCacheDuration: undefined,
+      jsCacheDuration: undefined,
+      cssCacheDuration: undefined,
+      imageCacheDuration: undefined
     },
     ow,
     s3: {},
@@ -246,10 +246,10 @@ const applicationSingleConfig = {
       dist: winCompat(`${root}dist/application`),
       defaultHostname: 'adobeio-static.net',
       hostname: 'adobeio-static.net',
-      htmlCacheDuration: '60',
-      jsCacheDuration: '604800',
-      cssCacheDuration: '604800',
-      imageCacheDuration: '604800'
+      htmlCacheDuration: undefined,
+      jsCacheDuration: undefined,
+      cssCacheDuration: undefined,
+      imageCacheDuration: undefined
     },
     ow,
     s3: {
@@ -304,10 +304,10 @@ const applicationNoActionsSingleConfig = {
       dist: winCompat(`${root}dist/application`),
       defaultHostname: 'adobeio-static.net',
       hostname: 'adobeio-static.net',
-      htmlCacheDuration: '60',
-      jsCacheDuration: '604800',
-      cssCacheDuration: '604800',
-      imageCacheDuration: '604800'
+      htmlCacheDuration: undefined,
+      jsCacheDuration: undefined,
+      cssCacheDuration: undefined,
+      imageCacheDuration: undefined
     },
     ow,
     s3: {
