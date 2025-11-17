@@ -96,7 +96,8 @@
     "runtimeManifest": {
       "type": "object",
       "properties": {
-        "packages": { "$ref": "#/definitions/packages" }
+        "packages": { "$ref": "#/definitions/packages" },
+        "database": { "$ref": "#/definitions/database" }
       },
       "required": ["packages"]
     },
@@ -107,6 +108,15 @@
           "$ref": "#/definitions/package"
         }
       },
+      "additionalProperties": false
+    },
+    "database": {
+      "type": "object",
+      "properties": {
+        "auto-provision": { "type": "boolean"},
+        "region": { "type": "string"}
+      },
+      "required": ["auto-provision"],
       "additionalProperties": false
     },
     "package": {

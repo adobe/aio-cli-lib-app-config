@@ -1,0 +1,20 @@
+application:
+  actions: 'myactions'
+  runtimeManifest:
+    database:
+      auto-provision: true
+      region: 'emea'
+    packages:
+      my-app-package:
+        license: 'Apache-2.0'
+        actions:
+          action:
+            function: 'myactions/action.js'
+            web: 'yes'
+            runtime: 'nodejs:14'
+            inputs:
+              LOG_LEVEL: 'debug'
+            annotations:
+              final: true
+              require-adobe-auth: true
+  web: 'web-src'

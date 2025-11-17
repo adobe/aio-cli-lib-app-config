@@ -631,6 +631,9 @@ async function buildSingleConfig (configName, singleUserConfig, commonConfig, in
   if (singleUserConfig.events) {
     config.events = { ...singleUserConfig.events }
   }
+  if (manifest && manifest.database) {
+    config.database = { ...manifest.database }
+  }
   if (commonConfig?.aio?.project) {
     config.project = commonConfig.aio.project
   }
