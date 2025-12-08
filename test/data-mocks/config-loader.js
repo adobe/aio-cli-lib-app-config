@@ -284,6 +284,73 @@ const applicationSingleConfig = {
   }
 }
 
+const appWithDatabaseActionsFolder = winCompat(`${root}myactions`)
+const applicationWithDatabaseSingleConfig = {
+  application: {
+    app: {
+      hasBackend: true,
+      hasFrontend: true,
+      dist: winCompat(`${root}dist/application`),
+      defaultHostname: 'adobeio-static.net',
+      hostname: 'mydomain.test',
+      htmlCacheDuration: '60',
+      jsCacheDuration: '60',
+      cssCacheDuration: '60',
+      imageCacheDuration: '60'
+    },
+    ow,
+    s3: {
+      credsCacheFile: winCompat(`${root}.aws.tmp.creds.json`)
+    },
+    web: {
+      src: winCompat(`${root}web-src`),
+      injectedConfig: winCompat(`${root}web-src/src/config.json`),
+      distDev: winCompat(`${root}dist/application/web-dev`),
+      distProd: winCompat(`${root}dist/application/web-prod`)
+    },
+    manifest: {
+      src: 'manifest.yml',
+      full: {
+        packages: {
+          'my-app-package': {
+            license: 'Apache-2.0',
+            actions: {
+              action: {
+                function: winCompat(`${appWithDatabaseActionsFolder}/action.js`),
+                web: 'yes',
+                runtime: 'nodejs:14',
+                inputs: {
+                  LOG_LEVEL: 'debug'
+                },
+                annotations: {
+                  final: true,
+                  'require-adobe-auth': true
+                }
+              }
+            }
+          }
+        },
+        database: {
+          'auto-provision': true,
+          region: 'emea'
+        }
+      },
+      packagePlaceholder: '__APP_PACKAGE__',
+      package: undefined
+    },
+    actions: {
+      src: appWithDatabaseActionsFolder,
+      dist: winCompat(`${root}dist/application/actions`)
+    },
+    tests: {
+      e2e: winCompat(`${root}e2e`),
+      unit: winCompat(`${root}test`)
+    },
+    root: `${root}`,
+    name: 'application'
+  }
+}
+
 const legacyManifest = fullFakeRuntimeManifest(appActionsFolder, '__APP_PACKAGE__')
 const applicationLegacyConfig = {
   application: {
@@ -359,6 +426,18 @@ const expectedConfigs = {
     packagejson: {
       version: '1.0.0',
       name: 'app'
+    },
+    root
+  },
+  'app-with-database': {
+    all: { ...applicationWithDatabaseSingleConfig },
+    implements: [
+      'application'
+    ],
+    includeIndex: appIncludeIndex,
+    packagejson: {
+      version: '1.0.0',
+      name: 'app-with-database'
     },
     root
   },
