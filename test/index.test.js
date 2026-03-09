@@ -976,6 +976,36 @@ application:
     expect(inputs.NIL).toBeNull()
   })
 
+  test('valid schema: package-level inputs (same constraints as action inputs)', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          runtimeManifest:
+            packages:
+              pkg:
+                license: Apache-2.0
+                inputs:
+                  PKG_LEVEL: pkg-default
+                  PKG_TAGS: ['a', 'b']
+                  PKG_COUNT: 10
+                actions:
+                  myaction:
+                    function: actions/test.js
+                    inputs:
+                      ACTION_INPUT: action-value
+        `
+      }
+    )
+    const config = await appConfig.load({})
+    const pkg = config.all.application.manifest.full.packages.pkg
+    expect(pkg.inputs.PKG_LEVEL).toBe('pkg-default')
+    expect(pkg.inputs.PKG_TAGS).toEqual(['a', 'b'])
+    expect(pkg.inputs.PKG_COUNT).toBe(10)
+    expect(pkg.actions.myaction.inputs.ACTION_INPUT).toBe('action-value')
+  })
+
   test('valid schema with productDependencies', async () => {
     global.fakeFileSystem.addJson(
       {

@@ -113,6 +113,7 @@
       "type": "object",
       "properties": {
         "license": { "type": "string" },
+        "inputs": { "$ref": "#/definitions/inputs" },
         "actions": { "$ref": "#/definitions/actions" }
       }
     },
