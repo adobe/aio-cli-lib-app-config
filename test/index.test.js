@@ -869,6 +869,113 @@ application:
     await expect(appConfig.load({})).rejects.toThrow('Missing or invalid keys in app.config.yaml')
   })
 
+  test('valid schema: action inputs support array (OpenWhisk spec)', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          runtimeManifest:
+            packages:
+              pkg:
+                actions:
+                  myaction:
+                    function: actions/test.js
+                    inputs:
+                      TAGS: ['tag1', 'tag2', 'tag3']
+                      EMPTY: []
+        `
+      }
+    )
+    const config = await appConfig.load({})
+    const inputs = config.all.application.manifest.full.packages.pkg.actions.myaction.inputs
+    expect(inputs.TAGS).toEqual(['tag1', 'tag2', 'tag3'])
+    expect(Array.isArray(inputs.TAGS)).toBe(true)
+    expect(inputs.EMPTY).toEqual([])
+  })
+
+  test('valid schema: action inputs support number (OpenWhisk spec)', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          runtimeManifest:
+            packages:
+              pkg:
+                actions:
+                  myaction:
+                    function: actions/test.js
+                    inputs:
+                      COUNT: 42
+                      NEGATIVE: -531
+                      FLOAT: 432.43
+        `
+      }
+    )
+    const config = await appConfig.load({})
+    const inputs = config.all.application.manifest.full.packages.pkg.actions.myaction.inputs
+    expect(inputs.COUNT).toBe(42)
+    expect(inputs.NEGATIVE).toBe(-531)
+    expect(inputs.FLOAT).toBe(432.43)
+  })
+
+  test('valid schema: action inputs support null (OpenWhisk spec)', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          runtimeManifest:
+            packages:
+              pkg:
+                actions:
+                  myaction:
+                    function: actions/test.js
+                    inputs:
+                      OPTIONAL: null
+        `
+      }
+    )
+    const config = await appConfig.load({})
+    const inputs = config.all.application.manifest.full.packages.pkg.actions.myaction.inputs
+    expect(inputs.OPTIONAL).toBeNull()
+  })
+
+  test('valid schema: action inputs support mixed types (OpenWhisk spec)', async () => {
+    global.fakeFileSystem.addJson(
+      {
+        '/package.json': '{}',
+        '/app.config.yaml': `
+        application:
+          runtimeManifest:
+            packages:
+              pkg:
+                actions:
+                  myaction:
+                    function: actions/test.js
+                    inputs:
+                      STR: hello
+                      NUM: 1
+                      FLAG: true
+                      ARR: [a, b]
+                      OBJ:
+                        type: string
+                        default: ''
+                      NIL: null
+        `
+      }
+    )
+    const config = await appConfig.load({})
+    const inputs = config.all.application.manifest.full.packages.pkg.actions.myaction.inputs
+    expect(inputs.STR).toBe('hello')
+    expect(inputs.NUM).toBe(1)
+    expect(inputs.FLAG).toBe(true)
+    expect(inputs.ARR).toEqual(['a', 'b'])
+    expect(inputs.OBJ).toEqual({ type: 'string', default: '' })
+    expect(inputs.NIL).toBeNull()
+  })
+
   test('valid schema with productDependencies', async () => {
     global.fakeFileSystem.addJson(
       {

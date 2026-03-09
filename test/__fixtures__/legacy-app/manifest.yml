@@ -8,6 +8,8 @@ packages:
         runtime: 'nodejs:14'
         inputs:
           LOG_LEVEL: 'debug'
+          TAGS: ['tag1', 'tag2']
+          MAX_ITEMS: 100
           SOMETHING:
             type: string
             description: this is about something
