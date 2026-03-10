@@ -113,6 +113,7 @@
       "type": "object",
       "properties": {
         "license": { "type": "string" },
+        "inputs": { "$ref": "#/definitions/inputs" },
         "actions": { "$ref": "#/definitions/actions" }
       }
     },
@@ -147,7 +148,7 @@
       "type": "object",
       "patternProperties": {
         "^[^\n]+$": {
-          "type": ["string", "boolean", "object"]
+          "type": ["string", "boolean", "number", "array", "object", "null"]
         }
       },
       "additionalProperties": false

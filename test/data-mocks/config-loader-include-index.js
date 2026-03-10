@@ -179,6 +179,22 @@ const appIncludeIndex = {
     file: 'app.config.yaml',
     key: 'application.runtimeManifest.packages.my-app-package.actions.action.inputs.LOG_LEVEL'
   },
+  'application.runtimeManifest.packages.my-app-package.actions.action.inputs.MAX_ITEMS': {
+    file: 'app.config.yaml',
+    key: 'application.runtimeManifest.packages.my-app-package.actions.action.inputs.MAX_ITEMS'
+  },
+  'application.runtimeManifest.packages.my-app-package.actions.action.inputs.TAGS': {
+    file: 'app.config.yaml',
+    key: 'application.runtimeManifest.packages.my-app-package.actions.action.inputs.TAGS'
+  },
+  'application.runtimeManifest.packages.my-app-package.actions.action.inputs.TAGS.0': {
+    file: 'app.config.yaml',
+    key: 'application.runtimeManifest.packages.my-app-package.actions.action.inputs.TAGS.0'
+  },
+  'application.runtimeManifest.packages.my-app-package.actions.action.inputs.TAGS.1': {
+    file: 'app.config.yaml',
+    key: 'application.runtimeManifest.packages.my-app-package.actions.action.inputs.TAGS.1'
+  },
   'application.runtimeManifest.packages.my-app-package.actions.action.inputs.SOMETHING': {
     file: 'app.config.yaml',
     key: 'application.runtimeManifest.packages.my-app-package.actions.action.inputs.SOMETHING'
@@ -637,6 +653,22 @@ const legacyIncludeIndex = {
   'application.runtimeManifest.packages.__APP_PACKAGE__.actions.action.inputs.LOG_LEVEL': {
     file: 'manifest.yml',
     key: 'packages.__APP_PACKAGE__.actions.action.inputs.LOG_LEVEL'
+  },
+  'application.runtimeManifest.packages.__APP_PACKAGE__.actions.action.inputs.MAX_ITEMS': {
+    file: 'manifest.yml',
+    key: 'packages.__APP_PACKAGE__.actions.action.inputs.MAX_ITEMS'
+  },
+  'application.runtimeManifest.packages.__APP_PACKAGE__.actions.action.inputs.TAGS': {
+    file: 'manifest.yml',
+    key: 'packages.__APP_PACKAGE__.actions.action.inputs.TAGS'
+  },
+  'application.runtimeManifest.packages.__APP_PACKAGE__.actions.action.inputs.TAGS.0': {
+    file: 'manifest.yml',
+    key: 'packages.__APP_PACKAGE__.actions.action.inputs.TAGS.0'
+  },
+  'application.runtimeManifest.packages.__APP_PACKAGE__.actions.action.inputs.TAGS.1': {
+    file: 'manifest.yml',
+    key: 'packages.__APP_PACKAGE__.actions.action.inputs.TAGS.1'
   },
   'application.runtimeManifest.packages.__APP_PACKAGE__.actions.action.inputs.SOMETHING': {
     file: 'manifest.yml',

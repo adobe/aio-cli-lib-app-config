@@ -46,6 +46,8 @@ function fullFakeRuntimeManifest (pathToActionFolder, pkgName1) {
             runtime: 'nodejs:14',
             inputs: {
               LOG_LEVEL: 'debug',
+              TAGS: ['tag1', 'tag2'],
+              MAX_ITEMS: 100,
               SOMETHING: {
                 type: 'string',
                 description: 'this is about something',
@@ -434,6 +436,11 @@ module.exports = (appFixtureName, mockedAIOConfig, rewriteMockConfig = {}) => {
     }
     if (mockedAIOConfig && mockedAIOConfig.project && mockedAIOConfig.project.org) {
       config.all[k].imsOrgId = mockedAIOConfig.project.org.ims_org_id
+    } else {
+      config.all[k].imsOrgId = config.all[k].imsOrgId ?? undefined
+    }
+    if (config.all[k].app.hasFrontend && config.all[k].s3) {
+      config.all[k].s3.tvmUrl = config.all[k].s3.tvmUrl ?? undefined
     }
     config.all[k].ow.package = `${config.packagejson.name}-${config.packagejson.version}`
     config.all[k].app.name = config.packagejson.name
