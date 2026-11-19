@@ -624,6 +624,59 @@ application:
     expect(config.all.application.web['response-headers']).toEqual({ '/*': { testHeader: 'foo' } })
   })
 
+  test('extensions with web paths', async () => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{}',
+      '/a/index.html': '',
+      '/b/index.html': '',
+      '/app.config.yaml': `
+        extensions:
+          dx/excshell/1:
+            web: { src: a, path: configuration/v1 }
+            operations: { view: [{ type: web, impl: index.html }] }
+          dx/other/1:
+            web: b
+            operations: { view: [{ type: web, impl: index.html }] }
+`
+    })
+    config = await appConfig.load({})
+    expect(config.all['dx/excshell/1'].web.path).toEqual('configuration/v1')
+    expect(config.all['dx/other/1'].web.path).toBeUndefined()
+  })
+
+  test('two extensions with the same web path', async () => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{}',
+      '/a/index.html': '',
+      '/b/index.html': '',
+      '/app.config.yaml': `
+        extensions:
+          dx/excshell/1:
+            web: { src: a, path: same }
+            operations: { view: [{ type: web, impl: index.html }] }
+          dx/other/1:
+            web: { src: b, path: same }
+            operations: { view: [{ type: web, impl: index.html }] }
+          dx/no-frontend/1:
+            web: { src: c, path: same }
+            operations: { view: [{ type: web, impl: index.html }] }
+`
+    })
+    await expect(appConfig.load({})).rejects.toThrow("'web.path: same' is set for both 'dx/excshell/1' and 'dx/other/1'")
+  })
+
+  test.each(['/configuration', 'configuration/', '..', 'a/../b', 'a//b', 'a b'])('invalid web path %s', async (webPath) => {
+    global.fakeFileSystem.addJson({
+      '/package.json': '{}',
+      '/app.config.yaml': `
+        application:
+          web: { path: '${webPath}' }
+          runtimeManifest: { packages: {} }
+`
+    })
+    await expect(appConfig.load({})).rejects.toThrow('must match pattern')
+  })
+
   test('valid configSchema with two fields', async () => {
     global.fakeFileSystem.addJson(
       {
