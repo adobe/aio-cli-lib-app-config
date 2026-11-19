@@ -79,6 +79,10 @@
           "type": "object",
           "properties": {
             "src": { "type": "string" },
+            "path": {
+              "type": "string",
+              "pattern": "^(?!(.*/)?\\.\\.?(/|$))[\\w.~-]+(/[\\w.~-]+)*$"
+            },
             "response-headers": {
               "type": "object",
               "patternProperties": {

@@ -521,10 +521,26 @@ async function mergeLegacyAppConfig (appConfigWithIncludeIndex, legacyAppConfigW
 
 /** @private */
 async function buildAllConfigs (userConfig, commonConfig, includeIndex) {
-  return {
+  const configs = {
     ...(await buildAppConfig(userConfig, commonConfig, includeIndex)),
     ...(await buildExtConfigs(userConfig, commonConfig, includeIndex))
   }
+  checkUniqueWebPaths(configs)
+  return configs
+}
+
+/** @private */
+function checkUniqueWebPaths (configs) {
+  const owners = {}
+  Object.entries(configs)
+    .filter(([, config]) => config.app.hasFrontend && config.web.path)
+    .forEach(([name, config]) => {
+      const owner = owners[config.web.path]
+      if (owner) {
+        throw new Error(`'web.path: ${config.web.path}' is set for both '${owner}' and '${name}', each web frontend needs its own path.`)
+      }
+      owners[config.web.path] = name
+    })
 }
 
 /** @private */
@@ -653,6 +669,9 @@ async function buildSingleConfig (configName, singleUserConfig, commonConfig, in
   config.web.src = path.resolve(web) // needed for app add first web-assets
   if (singleUserConfig.web && singleUserConfig.web['response-headers']) {
     config.web['response-headers'] = singleUserConfig.web['response-headers']
+  }
+  if (singleUserConfig.web && singleUserConfig.web.path) {
+    config.web.path = singleUserConfig.web.path
   }
   if (config.app.hasFrontend) {
     config.web.injectedConfig = path.resolve(path.join(web, 'src', 'config.json'))
